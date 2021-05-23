@@ -1,7 +1,8 @@
-import { BasePlugin, PluginMetadata } from "@nodepolus/framework/src/api/plugin";
+import { PluginMetadata } from "@nodepolus/framework/src/api/plugin";
+import { BaseMod } from "@polusgg/plugin-polusgg-api/src/baseMod/baseMod";
 
 const pluginMetadata: PluginMetadata = {
-  name: "Polus.gg Template Plugin",
+  name: "Hide and seek",
   version: [1, 0, 0],
   authors: [
     {
@@ -9,13 +10,22 @@ const pluginMetadata: PluginMetadata = {
       email: "contact@polus.gg",
       website: "https://polus.gg",
     },
+    {
+      name: "Jan Przebor",
+      email: "przebot@polus.gg",
+      website: "https://polus.gg",
+    }
   ],
-  description: "NodePolus plugin generated from the template repository",
+  description: "Hide and seek plugin for polus.gg",
   website: "https://polus.gg",
 };
 
-export default class extends BasePlugin {
+export default class HideAndSeek extends BaseMod {
   constructor() {
     super(pluginMetadata);
+  }
+
+  getEnabled(): boolean {
+    return true;
   }
 }
