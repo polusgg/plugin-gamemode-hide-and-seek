@@ -1,5 +1,5 @@
 # Polus.gg Hide and Seek plugin for NodePolus
-Plugin for NodePolus implementing hide and seek gamemode (WIP)
+Gamemode for Polus.gg implementing hide and seek gamemode (WIP)
 
 ## Original idea (Twitter: @hideamongseek)
 1. we immediately start an emergency meeting at the beginning of the game to reveal who is the impostor (killer) among us 
