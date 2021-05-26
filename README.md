@@ -8,10 +8,11 @@ Gamemode for Polus.gg implementing hide and seek gamemode (WIP)
 5. crewmates have to finish their tasks while avoiding the imposter
 
 ## Current implementation details
-1.  Seekers are being showed on introcutscene (maybe also a name color).
-2. Seekers are frozen (by the plugin) for configurable amount of time in their spawn location and limited vision.
-3. Seekers will be searching for hiders to kill. They have no kill cooldown.
-4. Hiders have to finish their tasks while avoiding the seekers.
-5. Hiders are less visible (transparent) while standing still
-6. Hiders can't call emergency meetings and report bodies.
-7. Seekers can't use sabotages, but vision of hiders is limited
+1.  Seekers are being showed on introcutscene (maybe also a name color)
+2. Seekers are frozen (by the plugin) for configurable amount of time in their spawn location and limited vision
+3. Seekers will be searching for hiders to kill. They have no kill cooldown
+4. Dead bodies despawn after a kill
+5. Hiders have to finish their tasks while avoiding the seekers
+6. Hiders are less visible (transparent) while standing still
+7. Hiders can't call emergency meetings and report bodies
+8. Seekers can't use sabotages, but vision of hiders is limited
