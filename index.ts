@@ -7,7 +7,7 @@ import { HiderRole } from "./src/roles/hiderRole";
 import { SeekerRole } from "./src/roles/seekerRole";
 
 const pluginMetadata: PluginMetadata = {
-  name: "Hide and seek",
+  name: "Hide and Seek",
   version: [1, 0, 0],
   authors: [
     {
@@ -19,7 +19,7 @@ const pluginMetadata: PluginMetadata = {
       name: "Jan Przebor",
       email: "przebot@polus.gg",
       website: "https://polus.gg",
-    }
+    },
   ],
   description: "Hide and seek plugin for polus.gg",
   website: "https://polus.gg",
@@ -43,9 +43,5 @@ export default class HideAndSeek extends BaseMod {
         assignWith: RoleAlignment.Impostor,
       },
     ];
-  }
-
-  getEnabled(): boolean {
-    return true;
   }
 }
