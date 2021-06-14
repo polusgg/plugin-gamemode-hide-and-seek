@@ -3,7 +3,9 @@ import { PluginMetadata } from "@nodepolus/framework/src/api/plugin";
 import { BaseMod } from "@polusgg/plugin-polusgg-api/src/baseMod/baseMod";
 import { RoleAlignment } from "@polusgg/plugin-polusgg-api/src/baseRole/baseRole";
 import { EnumValue, NumberValue } from "@polusgg/plugin-polusgg-api/src/packets/root/setGameOption";
+import { Services } from "@polusgg/plugin-polusgg-api/src/services";
 import { RoleAssignmentData } from "@polusgg/plugin-polusgg-api/src/services/roleManager/roleManagerService";
+import { Location, ServiceType } from "@polusgg/plugin-polusgg-api/src/types/enums";
 import { HiderRole } from "./src/roles/hiderRole";
 import { SeekerRole } from "./src/roles/seekerRole";
 import { HideAndSeekGameOptionCategories, HideAndSeekGameOptionNames } from "./src/types";
@@ -32,8 +34,27 @@ const pluginMetadata: PluginMetadata = {
 };
 
 export default class HideAndSeek extends BaseMod {
+  private readonly hudService = Services.get(ServiceType.Hud);
+  private hidersLeft = 0;
+
   constructor() {
     super(pluginMetadata);
+
+    this.server.on("meeting.started", event => {
+      if ((Services.get(ServiceType.GameOptions).getGameOptions(event.getGame().getLobby()).getOption("Gamemode")
+        .getValue() as EnumValue).getSelected() === pluginMetadata.name) {
+        event.cancel();
+      }
+    });
+
+    // Sabotage system is not implemented in NP :)
+    this.server.on("room.sabotaged", event => {
+      if ((Services.get(ServiceType.GameOptions).getGameOptions(event.getGame().getLobby()).getOption("Gamemode")
+        .getValue() as EnumValue).getSelected() === pluginMetadata.name) {
+        event.cancel();
+      }
+    });
+
   }
 
   getRoles(lobby: LobbyInstance): RoleAssignmentData[] {
