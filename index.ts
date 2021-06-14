@@ -55,6 +55,13 @@ export default class HideAndSeek extends BaseMod {
       }
     });
 
+    this.server.on("game.started", async event => {
+      await this.syncHidersCount(event.getGame().getLobby());
+    });
+
+    this.server.on("player.murdered", async event => {
+      await this.syncHidersCount(event.getPlayer().getLobby());
+    });
   }
 
   getRoles(lobby: LobbyInstance): RoleAssignmentData[] {
@@ -70,6 +77,13 @@ export default class HideAndSeek extends BaseMod {
         assignWith: RoleAlignment.Impostor,
       },
     ];
+  }
+
+  async syncHidersCount(lobby: LobbyInstance): Promise<void> {
+    this.hidersLeft = lobby.getRealPlayers().length - lobby.getOptions().getImpostorCount();
+    await lobby.getRealPlayers().forEach(player => {
+      this.hudService.setHudString(player, Location.PingTracker, `Ping: %s ms\nThere are ${this.hidersLeft} hiders left`);
+    });
   }
 
   async onEnable(lobby: LobbyInstance): Promise<void> {
