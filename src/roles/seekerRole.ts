@@ -1,5 +1,4 @@
 import { Palette } from "@nodepolus/framework/src/static";
-import { DeathReason } from "@nodepolus/framework/src/types/enums";
 import { PlayerInstance } from "@polusgg/plugin-polusgg-api/node_modules/@nodepolus/framework/src/api/player";
 import { BaseManager } from "@polusgg/plugin-polusgg-api/src/baseManager/baseManager";
 import { RoleAlignment, RoleMetadata } from "@polusgg/plugin-polusgg-api/src/baseRole/baseRole";
@@ -26,21 +25,16 @@ export class SeekerRole extends Impostor {
       canSeekerMove = true;
     }, 5000 + (gameOptions.getOption(HideAndSeekGameOptionNames.SeekerFreezeTime).getValue().value * 1000));
 
-    this.catch("room.sabotaged", e => e.getPlayer()).execute(e => {
-      e.cancel();
+    this.catch("player.position.walked", e => e.getPlayer()).execute(event => {
+      if (!canSeekerMove) { event.cancel() }
     });
 
-    this.catch("player.position.walked", e => e.getPlayer()).execute(e => {
-      if (!canSeekerMove) { e.cancel() }
+    this.catch("player.murdered", e => e.getKiller()).execute(event => {
+      if (!canSeekerMove) { event.cancel() }
+      this.getImpostorButton()?.setCurrentTime(0);
     });
 
-    this.catch("player.murdered", e => e.getKiller()).execute(e => {
-      if (e.getReason() === DeathReason.Murder) {
-        this.getImpostorButton()?.setMaxTime(0);
-      }
-    });
-
-    this.getImpostorButton()?.setMaxTime(0);
+    this.getImpostorButton()?.setCurrentTime(0);
   }
 
   getManagerType(): typeof BaseManager {
