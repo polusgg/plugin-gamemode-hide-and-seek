@@ -123,7 +123,7 @@ export default class HideAndSeek extends BaseMod {
       await this.syncHidersCount(event.getLobby());
 
       // Custom win condition below
-      if (event.getLobby().getPlayers().filter(x => x.isImpostor()).length === 0) {
+      if (event.getLobby().getRealPlayers().filter(p => p.getMeta<BaseRole | undefined>("pgg.api.role")?.getAlignment() === RoleAlignment.Impostor && !p.isDead()).length === 0) {
         this.endGameService.registerEndGameIntent(event.getPlayer().getLobby().getGame()!, {
           endGameData: new Map(event.getPlayer().getLobby().getPlayers()
             .map(player => [player, {
@@ -147,7 +147,7 @@ export default class HideAndSeek extends BaseMod {
                 .filter(sus => sus.getMeta<BaseRole | undefined>("pgg.api.role")?.getAlignment() === RoleAlignment.Impostor),
               winSound: WinSoundType.CrewmateWin,
             }])),
-          intentName: "seekersDisconnected",
+          intentName: "hidersDisconnected",
         });
       }
     });
@@ -159,7 +159,7 @@ export default class HideAndSeek extends BaseMod {
 
     const players = lobby.getPlayers();
 
-    const aliveHiders = players.filter(p => p.getMeta<BaseRole | undefined>("pgg.api.role")?.getAlignment() === RoleAlignment.Crewmate && !p.isDead());
+    const aliveHiders = players.filter(p => p.getMeta<BaseRole | undefined>("pgg.api.role")?.getAlignment() === RoleAlignment.Crewmate && !p.isDead() && !p.getGameDataEntry().isDisconnected());
 
     return aliveHiders.length === 0;
   }
@@ -180,7 +180,7 @@ export default class HideAndSeek extends BaseMod {
   }
 
   async syncHidersCount(lobby: LobbyInstance): Promise<void> {
-    this.hidersLeft = lobby.getRealPlayers().filter(p => !p.isDead() && !p.isImpostor()).length;
+    this.hidersLeft = lobby.getRealPlayers().filter(p => !p.isDead() && !p.getGameDataEntry().isDisconnected() && p.getMeta<BaseRole | undefined>("pgg.api.role")?.getAlignment() === RoleAlignment.Crewmate).length;
     await lobby.getRealPlayers().forEach(player => {
       this.hudService.setHudString(player, Location.PingTracker, `Ping: %s ms\nThere are ${this.hidersLeft} hiders left`);
     });
