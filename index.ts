@@ -182,7 +182,7 @@ export default class HideAndSeek extends BaseMod {
   async syncHidersCount(lobby: LobbyInstance): Promise<void> {
     this.hidersLeft = lobby.getRealPlayers().filter(p => !p.isDead() && !p.getGameDataEntry().isDisconnected() && p.getMeta<BaseRole | undefined>("pgg.api.role")?.getAlignment() === RoleAlignment.Crewmate).length;
     await lobby.getRealPlayers().forEach(player => {
-      this.hudService.setHudString(player, Location.PingTracker, `Ping: %s ms\nThere are ${this.hidersLeft} hiders left`);
+      this.hudService.setHudString(player, Location.PingTracker, `Ping: %s ms\nThere ${this.hidersLeft === 1 ? "is" : "are"} ${this.hidersLeft} hider${this.hidersLeft === 1 ? "" : "s"} left`);
     });
   }
 
