@@ -52,8 +52,13 @@ export class SeekerRole extends Impostor {
   getAssignmentScreen(_player: PlayerInstance): StartGameScreenData {
     return {
       title: "Seeker",
-      subtitle: "Hunt the hiders!",
+      subtitle: "Hunt the hiders down!",
       color: Palette.impostorRed(),
     };
+  }
+
+  getDescriptionText(): string {
+    return `<color=#ff1919>Role: Seeker
+Kill all hiders to win!</color>`;
   }
 }
