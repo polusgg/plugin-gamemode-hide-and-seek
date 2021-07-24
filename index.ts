@@ -83,6 +83,7 @@ export default class HideAndSeek extends BaseMod {
             event.getGame().getLobby().getRealPlayers()
               .forEach(player => {
                 if (player.isImpostor()) {
+                  (player.getMeta<BaseRole>("pgg.api.role") as Impostor).getImpostorButton()?.setCurrentTime(0);
                   player.setSpeedModifier(1);
                   player.setVisionModifier(1);
                 }

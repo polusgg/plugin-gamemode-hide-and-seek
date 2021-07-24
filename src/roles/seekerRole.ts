@@ -29,7 +29,6 @@ export class SeekerRole extends Impostor {
       this.getImpostorButton()?.setCurrentTime(0);
     });
 
-    this.getImpostorButton()?.setCurrentTime(0);
     this.catch("room.doors.closed", e => e.getPlayer()).execute(event => {
       if (!gameOptions.getOption(HideAndSeekGameOptionNames.SeekerCloseDoors).getValue().value || this.owner.getSpeedModifier() === 0) {
         event.cancel();
