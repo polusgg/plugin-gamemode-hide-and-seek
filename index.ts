@@ -60,14 +60,7 @@ export default class HideAndSeek extends BaseMod {
       }
     });
 
-    this.server.on("game.started", async event => {
-      await this.syncHidersCount(event.getGame().getLobby());
-
-      this.endGameService.registerExclusion(event.getGame(), { intentName: "impostorKill" });
-      this.endGameService.registerExclusion(event.getGame(), { intentName: "impostorDisconnected" });
-      this.endGameService.registerExclusion(event.getGame(), { intentName: "crewmateDisconnected" });
-      this.endGameService.registerExclusion(event.getGame(), { intentName: "crewmateTasks" });
-    });
+    //#endregion cancels
 
     this.server.on("game.ended", event => {
       event.getGame().getLobby().getRealPlayers()
@@ -76,7 +69,19 @@ export default class HideAndSeek extends BaseMod {
         });
     });
 
+    this.server.on("game.started", async event => {
+      if ((Services.get(ServiceType.GameOptions).getGameOptions(event.getGame().getLobby()).getOption("Gamemode")
+        .getValue() as EnumValue).getSelected() === pluginMetadata.name) {
+        const gameOptions = Services.get(ServiceType.GameOptions).getGameOptions<HideAndSeekGameOptions>(event.getGame().getLobby());
+
+        await this.syncHidersCount(event.getGame().getLobby());
+        await this.endGameService.registerExclusion(event.getGame(), { intentName: "impostorKill" });
+        await this.endGameService.registerExclusion(event.getGame(), { intentName: "impostorDisconnected" });
+        await this.endGameService.registerExclusion(event.getGame(), { intentName: "crewmateDisconnected" });
+        await this.endGameService.registerExclusion(event.getGame(), { intentName: "crewmateTasks" });
     this.server.on("player.murdered", async event => {
+      if ((Services.get(ServiceType.GameOptions).getGameOptions(event.getPlayer().getLobby()).getOption("Gamemode")
+        .getValue() as EnumValue).getSelected() !== pluginMetadata.name || event.getPlayer().getLobby().getGameState() === GameState.NotStarted) { return }
       await this.syncHidersCount(event.getPlayer().getLobby());
 
       if (event.getKiller().getMeta<BaseRole | undefined>("pgg.api.role")?.getAlignment() === RoleAlignment.Impostor && HideAndSeek.shouldEndGameSeekers(event.getPlayer().getLobby())) {
@@ -98,6 +103,9 @@ export default class HideAndSeek extends BaseMod {
     });
 
     this.server.on("player.task.completed", event => {
+      if ((Services.get(ServiceType.GameOptions).getGameOptions(event.getPlayer().getLobby()).getOption("Gamemode")
+        .getValue() as EnumValue).getSelected() !== pluginMetadata.name || event.getPlayer().getLobby().getGameState() === GameState.NotStarted) { return }
+
       if (event.getPlayer().getLobby().getPlayers()
         .filter(player => player.getMeta<BaseRole | undefined>("pgg.api.role")?.getAlignment() === RoleAlignment.Crewmate)
         .filter(player => !player.getLobby().getGameData()?.getGameData()
@@ -120,14 +128,15 @@ export default class HideAndSeek extends BaseMod {
     });
 
     this.server.on("player.left", async event => {
+      if ((Services.get(ServiceType.GameOptions).getGameOptions(event.getLobby()).getOption("Gamemode")
+        .getValue() as EnumValue).getSelected() !== pluginMetadata.name || event.getPlayer().getLobby().getGameState() === GameState.NotStarted) { return }
       await this.syncHidersCount(event.getLobby());
 
-      // Custom win condition below
-      if (event.getLobby().getRealPlayers().filter(p => p.getMeta<BaseRole | undefined>("pgg.api.role")?.getAlignment() === RoleAlignment.Impostor && !p.isDead()).length === 0) {
+      if (event.getLobby().getRealPlayers().filter(p => p.isImpostor() && !p.isDead() && !p.getGameDataEntry().isDisconnected()).length === 0) {
         this.endGameService.registerEndGameIntent(event.getPlayer().getLobby().getGame()!, {
           endGameData: new Map(event.getPlayer().getLobby().getPlayers()
             .map(player => [player, {
-              title: "Victory",
+              title: player.isImpostor() ? "Defeat" : "Victory",
               subtitle: "<color=#FF1919FF>Seekers</color> disconnected",
               color: Palette.crewmateBlue() as Mutable<[number, number, number, number]>,
               yourTeam: event.getLobby().getPlayers()
@@ -151,6 +160,7 @@ export default class HideAndSeek extends BaseMod {
         });
       }
     });
+  }
 
   static shouldEndGameSeekers(lobby: LobbyInstance): boolean {
     if (lobby.getGameState() == GameState.NotStarted) {
