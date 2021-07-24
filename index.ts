@@ -45,15 +45,15 @@ export default class HideAndSeek extends BaseMod {
   constructor() {
     super(pluginMetadata);
 
-    this.server.on("meeting.started", event => {
+    //#region cancels
+    this.server.on("room.sabotaged", event => {
       if ((Services.get(ServiceType.GameOptions).getGameOptions(event.getGame().getLobby()).getOption("Gamemode")
         .getValue() as EnumValue).getSelected() === pluginMetadata.name) {
         event.cancel();
       }
     });
 
-    // Sabotage system is not implemented in NP so this doesn't work sadge
-    this.server.on("room.sabotaged", event => {
+    this.server.on("meeting.started", event => {
       if ((Services.get(ServiceType.GameOptions).getGameOptions(event.getGame().getLobby()).getOption("Gamemode")
         .getValue() as EnumValue).getSelected() === pluginMetadata.name) {
         event.cancel();
