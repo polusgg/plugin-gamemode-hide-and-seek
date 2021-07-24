@@ -1,5 +1,6 @@
 export enum HideAndSeekGameOptionNames {
-  SeekerFreezeTime = "Seeker Freeze Time",
+  SeekerFreezeTime = "Seekers freeze time",
+  SeekerCloseDoors = "Seekers can close doors",
 }
 
 export enum HideAndSeekGameOptionCategories {

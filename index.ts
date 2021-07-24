@@ -5,7 +5,8 @@ import { Mutable } from "@nodepolus/framework/src/types";
 import { GameState } from "@nodepolus/framework/src/types/enums";
 import { BaseMod } from "@polusgg/plugin-polusgg-api/src/baseMod/baseMod";
 import { BaseRole, RoleAlignment } from "@polusgg/plugin-polusgg-api/src/baseRole/baseRole";
-import { EnumValue, NumberValue } from "@polusgg/plugin-polusgg-api/src/packets/root/setGameOption";
+import { Impostor } from "@polusgg/plugin-polusgg-api/src/baseRole/impostor/impostor";
+import { BooleanValue, EnumValue, NumberValue } from "@polusgg/plugin-polusgg-api/src/packets/root/setGameOption";
 import { Services } from "@polusgg/plugin-polusgg-api/src/services";
 import { RoleAssignmentData } from "@polusgg/plugin-polusgg-api/src/services/roleManager/roleManagerService";
 import { Location, ServiceType } from "@polusgg/plugin-polusgg-api/src/types/enums";
@@ -16,6 +17,7 @@ import { HideAndSeekGameOptionCategories, HideAndSeekGameOptionNames } from "./s
 
 export type HideAndSeekGameOptions = {
   [HideAndSeekGameOptionNames.SeekerFreezeTime]: NumberValue;
+  [HideAndSeekGameOptionNames.SeekerCloseDoors]: BooleanValue;
 };
 
 const pluginMetadata: PluginMetadata = {
@@ -233,6 +235,7 @@ export default class HideAndSeek extends BaseMod {
 
     await Promise.all([
       gameOptions.createOption(HideAndSeekGameOptionCategories.Config, HideAndSeekGameOptionNames.SeekerFreezeTime, new NumberValue(10, 2, 4, 20, false, "{0}s")),
+      gameOptions.createOption(HideAndSeekGameOptionCategories.Config, HideAndSeekGameOptionNames.SeekerCloseDoors, new BooleanValue(true)),
     ]);
   }
 
