@@ -15,13 +15,17 @@ Gamemode for Polus.gg implementing hide and seek gamemode (WIP)
 - ✔ Seekers will be searching for hiders to kill, they win if **all hiders** are killed. Seekers have no kill cooldown
 - ✔ Make proper win conditions with EndGame Service (custom exclusion with `registerExclusion` and custom EndGameIntent with `registerEndGameIntent`)
 - ✔ Hiders are less visible (transparent) while standing still
-- 😔 Seekers are blinded while being frozen
+- ✔ Seekers are blinded while being frozen
 - 😔 Dead bodies despawn after a kill
 - 😔 Seekers can't use sabotages and close doors
 
 ## Possible wins
-- Seekers by kills and disconnect (0 hiders remaining)
-- Hiders by tasks and disconnect
+- ✔ Seekers by kills and disconnect (0 hiders remaining)
+- ✔ Hiders by tasks and disconnect
+
+## Options
+- ✔ Seeker freeze time
+- ✔ Seekers can close doors
 
 ✔ - implemented <br />
 ❌ - to be implemented, possible with current API <br />
