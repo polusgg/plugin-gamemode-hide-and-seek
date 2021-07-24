@@ -27,8 +27,8 @@ export class HiderRole extends Crewmate {
       const opacity = clamp(event.getNewVelocity().magnitude() / event.getPlayer().getLobby().getOptions()
         .getPlayerSpeedModifier(), 0.2, 0.7);
 
-      if (opacity !== event.getPlayer().getMeta("hns.currentopacity")) {
-        event.getPlayer().setMeta("hns.currentopacity", opacity);
+      if (opacity !== event.getPlayer().getMeta("pgg.hns.currentopacity")) {
+        event.getPlayer().setMeta("pgg.hns.currentopacity", opacity);
         playerAnimationService.setOpacity(event.getPlayer(), opacity);
       }
     });
