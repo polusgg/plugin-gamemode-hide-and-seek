@@ -17,7 +17,7 @@ Gamemode for Polus.gg implementing hide and seek gamemode (WIP)
 - ✔ Hiders are less visible (transparent) while standing still
 - ✔ Seekers are blinded while being frozen
 - 😔 Dead bodies despawn after a kill
-- 😔 Seekers can't use sabotages and close doors
+- ✔ Seekers can't use sabotages
 
 ## Possible wins
 - ✔ Seekers by kills and disconnect (0 hiders remaining)
