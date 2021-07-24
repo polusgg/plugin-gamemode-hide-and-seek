@@ -62,13 +62,6 @@ export default class HideAndSeek extends BaseMod {
 
     //#endregion cancels
 
-    this.server.on("game.ended", event => {
-      event.getGame().getLobby().getRealPlayers()
-        .forEach(p => {
-          this.hudService.setHudString(p, Location.PingTracker, "__unset");
-        });
-    });
-
     this.server.on("game.started", async event => {
       if ((Services.get(ServiceType.GameOptions).getGameOptions(event.getGame().getLobby()).getOption("Gamemode")
         .getValue() as EnumValue).getSelected() === pluginMetadata.name) {
@@ -224,8 +217,12 @@ export default class HideAndSeek extends BaseMod {
 
   async syncHidersCount(lobby: LobbyInstance): Promise<void> {
     this.hidersLeft = lobby.getRealPlayers().filter(p => !p.isDead() && !p.getGameDataEntry().isDisconnected() && p.getMeta<BaseRole | undefined>("pgg.api.role")?.getAlignment() === RoleAlignment.Crewmate).length;
-    await lobby.getRealPlayers().forEach(player => {
-      this.hudService.setHudString(player, Location.PingTracker, `Ping: %s ms\nThere ${this.hidersLeft === 1 ? "is" : "are"} ${this.hidersLeft} hider${this.hidersLeft === 1 ? "" : "s"} left`);
+    await lobby.getRealPlayers().forEach(async player => {
+      if (this.hidersLeft === 0) {
+        await this.hudService.setHudString(player, Location.PingTracker, "__unset");
+      } else {
+        await this.hudService.setHudString(player, Location.PingTracker, `Ping: %s ms\nThere ${this.hidersLeft === 1 ? "is" : "are"} ${this.hidersLeft} hider${this.hidersLeft === 1 ? "" : "s"} left`);
+      }
     });
   }
 
