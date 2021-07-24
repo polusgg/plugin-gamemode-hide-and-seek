@@ -79,6 +79,39 @@ export default class HideAndSeek extends BaseMod {
         await this.endGameService.registerExclusion(event.getGame(), { intentName: "impostorDisconnected" });
         await this.endGameService.registerExclusion(event.getGame(), { intentName: "crewmateDisconnected" });
         await this.endGameService.registerExclusion(event.getGame(), { intentName: "crewmateTasks" });
+
+        // 5 seconds is an average IntroCutscene load time
+        const freezeTime = 5 + gameOptions.getOption(HideAndSeekGameOptionNames.SeekerFreezeTime).getValue().value;
+        let timeElapsed = 0;
+        const timeout = setInterval(() => {
+          if (timeElapsed >= freezeTime) {
+            event.getGame().getLobby().getRealPlayers()
+              .forEach(player => {
+                if (player.isImpostor()) {
+                  player.setSpeedModifier(1);
+                  player.setVisionModifier(1);
+                }
+                this.hudService.setHudString(player, Location.RoomTracker, "__unset");
+              });
+            clearInterval(timeout);
+          } else {
+            event.getGame().getLobby().getRealPlayers()
+              .forEach(player => {
+                if (player.isImpostor()) {
+                  this.hudService.setHudString(player, Location.RoomTracker, `You will be released in ${freezeTime - timeElapsed} second${(freezeTime - timeElapsed) === 1 ? "" : "s"}`);
+                } else {
+                  this.hudService.setHudString(player, Location.RoomTracker, `<color=#FF1919FF>Seeker${event.getGame().getLobby().getRealPlayers()
+                    .filter(p => p.isImpostor()).length === 1
+                    ? ""
+                    : "s"}</color> will be released in ${freezeTime - timeElapsed} second${(freezeTime - timeElapsed) === 1 ? "" : "s"}`);
+                }
+              });
+          }
+          timeElapsed += 1;
+        }, 1000);
+      }
+    });
+
     this.server.on("player.murdered", async event => {
       if ((Services.get(ServiceType.GameOptions).getGameOptions(event.getPlayer().getLobby()).getOption("Gamemode")
         .getValue() as EnumValue).getSelected() !== pluginMetadata.name || event.getPlayer().getLobby().getGameState() === GameState.NotStarted) { return }

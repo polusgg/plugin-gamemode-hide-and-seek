@@ -1,13 +1,12 @@
+import { PlayerInstance } from "@nodepolus/framework/src/api/player";
 import { Palette } from "@nodepolus/framework/src/static";
-import { PlayerInstance } from "@polusgg/plugin-polusgg-api/node_modules/@nodepolus/framework/src/api/player";
 import { BaseManager } from "@polusgg/plugin-polusgg-api/src/baseManager/baseManager";
 import { RoleAlignment, RoleMetadata } from "@polusgg/plugin-polusgg-api/src/baseRole/baseRole";
 import { Impostor } from "@polusgg/plugin-polusgg-api/src/baseRole/impostor/impostor";
 import { Services } from "@polusgg/plugin-polusgg-api/src/services";
 import { StartGameScreenData } from "@polusgg/plugin-polusgg-api/src/services/roleManager/roleManagerService";
 import { ServiceType } from "@polusgg/plugin-polusgg-api/src/types/enums";
-import { HideAndSeekGameOptions } from "../..";
-import { HideAndSeekGameOptionNames } from "../types";
+import { HudItem } from "@polusgg/plugin-polusgg-api/src/types/enums/hudItem";
 
 export class SeekerRole extends Impostor {
   protected readonly metadata: RoleMetadata = {
@@ -18,23 +17,18 @@ export class SeekerRole extends Impostor {
   constructor(owner: PlayerInstance) {
     super(owner);
 
-    const gameOptions = Services.get(ServiceType.GameOptions).getGameOptions<HideAndSeekGameOptions>(this.owner.getLobby());
-    let canSeekerMove = false;
+    const hudService = Services.get(ServiceType.Hud);
 
-    setTimeout(() => {
-      canSeekerMove = true;
-    }, 5000 + (gameOptions.getOption(HideAndSeekGameOptionNames.SeekerFreezeTime).getValue().value * 1000));
+    hudService.setHudVisibility(owner, HudItem.MapSabotageButtons, false);
 
-    this.catch("player.position.walked", e => e.getPlayer()).execute(event => {
-      if (!canSeekerMove) { event.cancel() }
-    });
-
-    this.catch("player.murdered", e => e.getKiller()).execute(event => {
-      if (!canSeekerMove) { event.cancel() }
+    this.catch("player.murdered", e => e.getKiller()).execute(_event => {
       this.getImpostorButton()?.setCurrentTime(0);
     });
 
     this.getImpostorButton()?.setCurrentTime(0);
+
+    this.owner.setSpeedModifier(0);
+    this.owner.setVisionModifier(0.1);
   }
 
   getManagerType(): typeof BaseManager {
