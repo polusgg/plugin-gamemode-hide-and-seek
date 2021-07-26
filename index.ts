@@ -10,6 +10,7 @@ import { BooleanValue, EnumValue, NumberValue } from "@polusgg/plugin-polusgg-ap
 import { Services } from "@polusgg/plugin-polusgg-api/src/services";
 import { RoleAssignmentData } from "@polusgg/plugin-polusgg-api/src/services/roleManager/roleManagerService";
 import { Location, ServiceType } from "@polusgg/plugin-polusgg-api/src/types/enums";
+import { HudItem } from "@polusgg/plugin-polusgg-api/src/types/enums/hudItem";
 import { WinSoundType } from "@polusgg/plugin-polusgg-api/src/types/enums/winSound";
 import { HiderRole } from "./src/roles/hiderRole";
 import { SeekerRole } from "./src/roles/seekerRole";
@@ -74,6 +75,11 @@ export default class HideAndSeek extends BaseMod {
         await this.endGameService.registerExclusion(event.getGame(), { intentName: "impostorDisconnected" });
         await this.endGameService.registerExclusion(event.getGame(), { intentName: "crewmateDisconnected" });
         await this.endGameService.registerExclusion(event.getGame(), { intentName: "crewmateTasks" });
+
+        event.getGame().getLobby().getRealPlayers()
+          .forEach(player => {
+            this.hudService.setHudVisibility(player, HudItem.ReportButton, false);
+          });
 
         // 5 seconds is an average IntroCutscene load time
         const freezeTime = 5 + gameOptions.getOption(HideAndSeekGameOptionNames.SeekerFreezeTime).getValue().value;
