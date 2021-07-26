@@ -123,9 +123,9 @@ export default class HideAndSeek extends BaseMod {
         this.endGameService.registerEndGameIntent(event.getPlayer().getLobby().getGame()!, {
           endGameData: new Map(event.getPlayer().getLobby().getPlayers()
             .map(player => [player, {
-              title: player.isImpostor() ? "Victory" : "Defeat",
+              title: player.isImpostor() ? "<color=#8cffff>Victory</color>" : "<color=#FF1919FF>Defeat</color>",
               subtitle: "<color=#FF1919FF>Seekers</color> won by killing all hiders",
-              color: Palette.impostorRed() as Mutable<[number, number, number, number]>,
+              color: player.isImpostor() ? Palette.crewmateBlue() as Mutable<[number, number, number, number]> : Palette.impostorRed() as Mutable<[number, number, number, number]>,
               yourTeam: event.getPlayer()
                 .getLobby()
                 .getPlayers()
@@ -150,9 +150,9 @@ export default class HideAndSeek extends BaseMod {
         this.endGameService.registerEndGameIntent(event.getPlayer().getLobby().getGame()!, {
           endGameData: new Map(event.getPlayer().getLobby().getPlayers()
             .map(player => [player, {
-              title: player.getMeta<BaseRole | undefined>("pgg.api.role")?.getAlignment() === RoleAlignment.Crewmate ? "Victory" : "Defeat",
+              title: !player.isImpostor() ? "<color=#8cffff>Victory</color>" : "<color=#FF1919FF>Defeat</color>",
               subtitle: "<color=#8CFFFFFF>Hiders</color> won by finishing all tasks",
-              color: Palette.crewmateBlue() as Mutable<[number, number, number, number]>,
+              color: !player.isImpostor() ? Palette.crewmateBlue() as Mutable<[number, number, number, number]> : Palette.impostorRed() as Mutable<[number, number, number, number]>,
               yourTeam: event.getPlayer().getLobby().getPlayers()
                 .filter(sus => sus.getMeta<BaseRole | undefined>("pgg.api.role")?.getAlignment() === RoleAlignment.Crewmate),
               winSound: WinSoundType.CrewmateWin,
@@ -171,7 +171,7 @@ export default class HideAndSeek extends BaseMod {
         this.endGameService.registerEndGameIntent(event.getPlayer().getLobby().getGame()!, {
           endGameData: new Map(event.getPlayer().getLobby().getPlayers()
             .map(player => [player, {
-              title: player.isImpostor() ? "Defeat" : "Victory",
+              title: !player.isImpostor() ? "<color=#8cffff>Victory</color>" : "<color=#FF1919FF>Defeat</color>",
               subtitle: "<color=#FF1919FF>Seekers</color> disconnected",
               color: Palette.crewmateBlue() as Mutable<[number, number, number, number]>,
               yourTeam: event.getLobby().getPlayers()
@@ -184,9 +184,9 @@ export default class HideAndSeek extends BaseMod {
         this.endGameService.registerEndGameIntent(event.getPlayer().getLobby().getGame()!, {
           endGameData: new Map(event.getPlayer().getLobby().getPlayers()
             .map(player => [player, {
-              title: player.isImpostor() ? "Victory" : "Defeat",
+              title: player.isImpostor() ? "<color=#132cd2>Victory</color>" : "<color=#FF1919FF>Defeat</color>",
               subtitle: "<color=#8CFFFFFF>Hiders</color> disconnected",
-              color: Palette.impostorRed() as Mutable<[number, number, number, number]>,
+              color: player.isImpostor() ? Palette.crewmateBlue() as Mutable<[number, number, number, number]> : Palette.impostorRed() as Mutable<[number, number, number, number]>,
               yourTeam: event.getLobby().getPlayers()
                 .filter(sus => sus.getMeta<BaseRole | undefined>("pgg.api.role")?.getAlignment() === RoleAlignment.Impostor),
               winSound: WinSoundType.CrewmateWin,
