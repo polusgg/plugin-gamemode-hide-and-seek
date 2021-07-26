@@ -49,7 +49,7 @@ export class HiderRole extends Crewmate {
   getAssignmentScreen(_player: PlayerInstance): StartGameScreenData {
     return {
       title: "Hider",
-      subtitle: "Finish your tasks and escape from the seekers!",
+      subtitle: "Finish your tasks and escape from the <color=#FF1919FF>Seekers!</color>",
       color: Palette.crewmateBlue(),
     };
   }
