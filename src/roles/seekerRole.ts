@@ -20,12 +20,18 @@ export class SeekerRole extends Impostor {
     super(owner);
 
     const hudService = Services.get(ServiceType.Hud);
-    const gameOptions = Services.get(ServiceType.GameOptions).getGameOptions<HideAndSeekGameOptions>(this.owner.getLobby());
+    const gameOptions = Services.get(ServiceType.GameOptions).getGameOptions<HideAndSeekGameOptions>(owner.getLobby());
 
     hudService.setHudVisibility(owner, HudItem.MapSabotageButtons, false);
     hudService.setHudVisibility(owner, HudItem.SabotageButton, gameOptions.getOption(HideAndSeekGameOptionNames.SeekerCloseDoors).getValue().value);
 
-    this.catch("player.murdered", e => e.getKiller()).execute(_event => {
+    owner.setSpeedModifier(0);
+    owner.setVisionModifier(0.1);
+
+    this.catch("player.murdered", e => e.getKiller()).execute(event => {
+      if (this.owner.getSpeedModifier() === 0) {
+        event.cancel();
+      }
       this.getImpostorButton()?.setCurrentTime(0);
     });
 
@@ -34,9 +40,6 @@ export class SeekerRole extends Impostor {
         event.cancel();
       }
     });
-
-    this.owner.setSpeedModifier(0);
-    this.owner.setVisionModifier(0.1);
   }
 
   getManagerType(): typeof BaseManager {
