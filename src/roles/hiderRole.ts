@@ -30,7 +30,7 @@ export class HiderRole extends Crewmate {
         .getPlayerSpeedModifier(), 0.12, 0.7);
 
       if (opacity !== event.getPlayer().getMeta("pgg.hns.currentopacity")) {
-        await playerAnimationService.beginPlayerAnimation(event.getPlayer(), [PlayerAnimationField.Opacity, PlayerAnimationField.SkinOpacity, PlayerAnimationField.HatOpacity, PlayerAnimationField.PetOpacity, PlayerAnimationField.Angle], [
+        await playerAnimationService.beginPlayerAnimation(event.getPlayer(), [PlayerAnimationField.Opacity, PlayerAnimationField.SkinOpacity, PlayerAnimationField.HatOpacity, PlayerAnimationField.PetOpacity], [
           new PlayerAnimationKeyframe({
             offset: 0,
             duration: 100,
