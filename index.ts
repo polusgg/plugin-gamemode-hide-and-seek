@@ -8,7 +8,7 @@ import { BaseRole, RoleAlignment } from "@polusgg/plugin-polusgg-api/src/baseRol
 import { Impostor } from "@polusgg/plugin-polusgg-api/src/baseRole/impostor/impostor";
 import { BooleanValue, EnumValue, NumberValue } from "@polusgg/plugin-polusgg-api/src/packets/root/setGameOption";
 import { Services } from "@polusgg/plugin-polusgg-api/src/services";
-import { RoleAssignmentData } from "@polusgg/plugin-polusgg-api/src/services/roleManager/roleManagerService";
+import { RoleAssignmentData, RoleManagerService } from "@polusgg/plugin-polusgg-api/src/services/roleManager/roleManagerService";
 import { Location, ServiceType } from "@polusgg/plugin-polusgg-api/src/types/enums";
 import { HudItem } from "@polusgg/plugin-polusgg-api/src/types/enums/hudItem";
 import { WinSoundType } from "@polusgg/plugin-polusgg-api/src/types/enums/winSound";
