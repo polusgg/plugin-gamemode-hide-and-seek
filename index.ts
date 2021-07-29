@@ -213,12 +213,12 @@ export default class HideAndSeek extends BaseMod {
     return [
       {
         role: HiderRole,
-        playerCount: lobby.getRealPlayers().length - lobby.getOptions().getImpostorCount(),
+        playerCount: lobby.getRealPlayers().length - Math.min(lobby.getOptions().getImpostorCount(), RoleManagerService.adjustImpostorCount(lobby.getOptions().getImpostorCount())),
         assignWith: RoleAlignment.Crewmate,
       },
       {
         role: SeekerRole,
-        playerCount: lobby.getOptions().getImpostorCount(),
+        playerCount: Math.min(lobby.getOptions().getImpostorCount(), RoleManagerService.adjustImpostorCount(lobby.getOptions().getImpostorCount())),
         assignWith: RoleAlignment.Impostor,
       },
     ];
