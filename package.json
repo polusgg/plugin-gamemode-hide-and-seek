@@ -1,7 +1,7 @@
 {
   "name": "@polusgg/plugin-gamemode-hide-and-seek",
   "np-plugin": true,
-  "version": "1.0.1-0",
+  "version": "1.0.1-1",
   "description": "Polus.gg Hide and Seek gamemode plugin for NodePolus",
   "scripts": {
     "lint": "eslint . --ext .ts",
