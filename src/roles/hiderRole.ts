@@ -1,6 +1,6 @@
 import { Palette } from "@nodepolus/framework/src/static";
 import { clamp } from "@nodepolus/framework/src/util/functions";
-import { PlayerInstance } from "@polusgg/plugin-polusgg-api/node_modules/@nodepolus/framework/src/api/player";
+import { PlayerInstance } from "@nodepolus/framework/src/api/player";
 import { BaseManager } from "@polusgg/plugin-polusgg-api/src/baseManager/baseManager";
 import { RoleAlignment, RoleMetadata } from "@polusgg/plugin-polusgg-api/src/baseRole/baseRole";
 import { Crewmate } from "@polusgg/plugin-polusgg-api/src/baseRole/crewmate/crewmate";
