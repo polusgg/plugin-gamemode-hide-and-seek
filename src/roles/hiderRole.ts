@@ -24,6 +24,18 @@ export class HiderRole extends Crewmate {
     const playerAnimationService = Services.get(ServiceType.Animation);
     const gameOptions = Services.get(ServiceType.GameOptions).getGameOptions<HideAndSeekGameOptions>(owner.getLobby());
 
+    const initialOpacity = gameOptions.getOption(HideAndSeekGameOptionNames.HidersOpacity).getValue().value / 100;
+
+    playerAnimationService.beginPlayerAnimation(this.owner, [PlayerAnimationField.Opacity, PlayerAnimationField.SkinOpacity, PlayerAnimationField.HatOpacity, PlayerAnimationField.PetOpacity], [
+      new PlayerAnimationKeyframe({
+        offset: 0,
+        duration: 0,
+        opacity: initialOpacity,
+        petOpacity: initialOpacity,
+      }),
+    ], false);
+    this.owner.setMeta("pgg.hns.currentopacity", initialOpacity);
+
     this.catch("player.position.walked", e => e.getPlayer()).execute(async event => {
       if (event.getPlayer().isDead()) {
         return;
