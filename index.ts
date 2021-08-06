@@ -19,6 +19,9 @@ import { HideAndSeekGameOptionCategories, HideAndSeekGameOptionNames } from "./s
 export type HideAndSeekGameOptions = {
   [HideAndSeekGameOptionNames.SeekerFreezeTime]: NumberValue;
   [HideAndSeekGameOptionNames.SeekerCloseDoors]: BooleanValue;
+  [HideAndSeekGameOptionNames.HidersNamesVisibility]: BooleanValue;
+  [HideAndSeekGameOptionNames.HidersColorLoss]: BooleanValue;
+  [HideAndSeekGameOptionNames.HidersOpacity]: NumberValue;
 };
 
 const pluginMetadata: PluginMetadata = {
@@ -43,6 +46,7 @@ const pluginMetadata: PluginMetadata = {
 export default class HideAndSeek extends BaseMod {
   private readonly hudService = Services.get(ServiceType.Hud);
   private readonly endGameService = Services.get(ServiceType.EndGame);
+  private readonly nameService = Services.get(ServiceType.Name);
   private hidersLeft = 0;
 
   constructor() {
@@ -77,8 +81,11 @@ export default class HideAndSeek extends BaseMod {
         await this.endGameService.registerExclusion(event.getGame(), { intentName: "crewmateTasks" });
 
         event.getGame().getLobby().getRealPlayers()
-          .forEach(player => {
-            this.hudService.setHudVisibility(player, HudItem.ReportButton, false);
+          .forEach(async player => {
+            if (!player.isImpostor() && gameOptions.getOption(HideAndSeekGameOptionNames.HidersNamesVisibility).getValue().value) {
+              await this.nameService.set(player, "");
+            }
+            await this.hudService.setHudVisibility(player, HudItem.ReportButton, false);
           });
 
         // 5 seconds is an average IntroCutscene load time
@@ -245,8 +252,11 @@ export default class HideAndSeek extends BaseMod {
     const gameOptions = Services.get(ServiceType.GameOptions).getGameOptions<HideAndSeekGameOptions>(lobby);
 
     await Promise.all([
-      gameOptions.createOption(HideAndSeekGameOptionCategories.Config, HideAndSeekGameOptionNames.SeekerFreezeTime, new NumberValue(10, 2, 4, 20, false, "{0}s")),
-      gameOptions.createOption(HideAndSeekGameOptionCategories.Config, HideAndSeekGameOptionNames.SeekerCloseDoors, new BooleanValue(true)),
+      gameOptions.createOption(HideAndSeekGameOptionCategories.Seekers, HideAndSeekGameOptionNames.SeekerFreezeTime, new NumberValue(10, 2, 4, 20, false, "{0}s")),
+      gameOptions.createOption(HideAndSeekGameOptionCategories.Seekers, HideAndSeekGameOptionNames.SeekerCloseDoors, new BooleanValue(true)),
+      gameOptions.createOption(HideAndSeekGameOptionCategories.Hiders, HideAndSeekGameOptionNames.HidersNamesVisibility, new BooleanValue(true)),
+      gameOptions.createOption(HideAndSeekGameOptionCategories.Hiders, HideAndSeekGameOptionNames.HidersColorLoss, new BooleanValue(false)),
+      gameOptions.createOption(HideAndSeekGameOptionCategories.Hiders, HideAndSeekGameOptionNames.HidersOpacity, new NumberValue(15, 5, 10, 50, false, "{0}%")),
     ]);
   }
 

@@ -9,6 +9,8 @@ import { PlayerAnimationKeyframe } from "@polusgg/plugin-polusgg-api/src/service
 import { StartGameScreenData } from "@polusgg/plugin-polusgg-api/src/services/roleManager/roleManagerService";
 import { ServiceType } from "@polusgg/plugin-polusgg-api/src/types/enums";
 import { PlayerAnimationField } from "@polusgg/plugin-polusgg-api/src/types/playerAnimationFields";
+import { HideAndSeekGameOptions } from "../..";
+import { HideAndSeekGameOptionNames } from "../types";
 
 export class HiderRole extends Crewmate {
   protected readonly metadata: RoleMetadata = {
@@ -20,6 +22,7 @@ export class HiderRole extends Crewmate {
     super(owner);
 
     const playerAnimationService = Services.get(ServiceType.Animation);
+    const gameOptions = Services.get(ServiceType.GameOptions).getGameOptions<HideAndSeekGameOptions>(owner.getLobby());
 
     this.catch("player.position.walked", e => e.getPlayer()).execute(async event => {
       if (event.getPlayer().isDead()) {
@@ -27,7 +30,7 @@ export class HiderRole extends Crewmate {
       }
 
       const opacity = clamp(event.getNewVelocity().magnitude() / event.getPlayer().getLobby().getOptions()
-        .getPlayerSpeedModifier(), 0.12, 0.7);
+        .getPlayerSpeedModifier(), gameOptions.getOption(HideAndSeekGameOptionNames.HidersOpacity).getValue().value / 100, 0.7);
 
       if (opacity !== event.getPlayer().getMeta("pgg.hns.currentopacity")) {
         await playerAnimationService.beginPlayerAnimation(event.getPlayer(), [PlayerAnimationField.Opacity, PlayerAnimationField.SkinOpacity, PlayerAnimationField.HatOpacity, PlayerAnimationField.PetOpacity], [
