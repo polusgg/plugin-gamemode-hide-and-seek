@@ -131,6 +131,7 @@ export default class HideAndSeek extends BaseMod {
                 .getPlayers()
                 .filter(sus => sus.isImpostor()),
               winSound: WinSoundType.ImpostorWin,
+              hasWon: player.isImpostor(),
             }])),
           intentName: "seekersKill",
         });
@@ -156,6 +157,7 @@ export default class HideAndSeek extends BaseMod {
               yourTeam: event.getPlayer().getLobby().getPlayers()
                 .filter(sus => sus.getMeta<BaseRole | undefined>("pgg.api.role")?.getAlignment() === RoleAlignment.Crewmate),
               winSound: WinSoundType.CrewmateWin,
+              hasWon: !player.isImpostor(),
             }])),
           intentName: "hidersTasks",
         });
@@ -177,6 +179,7 @@ export default class HideAndSeek extends BaseMod {
               yourTeam: event.getLobby().getPlayers()
                 .filter(sus => sus.getMeta<BaseRole | undefined>("pgg.api.role")?.getAlignment() === RoleAlignment.Crewmate),
               winSound: WinSoundType.ImpostorWin,
+              hasWon: !player.isImpostor(),
             }])),
           intentName: "seekersDisconnected",
         });
@@ -190,6 +193,7 @@ export default class HideAndSeek extends BaseMod {
               yourTeam: event.getLobby().getPlayers()
                 .filter(sus => sus.getMeta<BaseRole | undefined>("pgg.api.role")?.getAlignment() === RoleAlignment.Impostor),
               winSound: WinSoundType.CrewmateWin,
+              hasWon: player.isImpostor(),
             }])),
           intentName: "hidersDisconnected",
         });
