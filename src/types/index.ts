@@ -7,6 +7,6 @@ export enum HideAndSeekGameOptionNames {
 }
 
 export enum HideAndSeekGameOptionCategories {
-  Hiders = "Hiders Configuration",
-  Seekers = "Seekers Configuration",
+  Hiders = "<color=#8cffff>Hiders</color> Configuration",
+  Seekers = "<color=#ff1919>Seekers</color> Configuration",
 }

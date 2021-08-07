@@ -241,7 +241,7 @@ export default class HideAndSeek extends BaseMod {
       if (this.hidersLeft === 0) {
         await this.hudService.setHudString(player, Location.PingTracker, "__unset");
       } else {
-        await this.hudService.setHudString(player, Location.PingTracker, `Ping: %s ms\nThere ${this.hidersLeft === 1 ? "is" : "are"} ${this.hidersLeft} hider${this.hidersLeft === 1 ? "" : "s"} left`);
+        await this.hudService.setHudString(player, Location.PingTracker, `Ping: %s ms\nThere ${this.hidersLeft === 1 ? "is" : "are"} ${this.hidersLeft} <color=#8cffff>Hider${this.hidersLeft === 1 ? "" : "s"}</color> left`);
       }
     });
   }
