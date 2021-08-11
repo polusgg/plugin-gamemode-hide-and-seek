@@ -20,7 +20,7 @@ export type HideAndSeekGameOptions = {
   [HideAndSeekGameOptionNames.SeekerFreezeTime]: NumberValue;
   [HideAndSeekGameOptionNames.SeekerCloseDoors]: BooleanValue;
   [HideAndSeekGameOptionNames.HidersNamesVisibility]: BooleanValue;
-  [HideAndSeekGameOptionNames.HidersColorLoss]: BooleanValue;
+  //[HideAndSeekGameOptionNames.HidersColorLoss]: BooleanValue;
   [HideAndSeekGameOptionNames.HidersOpacity]: NumberValue;
 };
 
@@ -255,7 +255,7 @@ export default class HideAndSeek extends BaseMod {
       gameOptions.createOption(HideAndSeekGameOptionCategories.Seekers, HideAndSeekGameOptionNames.SeekerFreezeTime, new NumberValue(10, 2, 4, 20, false, "{0}s")),
       gameOptions.createOption(HideAndSeekGameOptionCategories.Seekers, HideAndSeekGameOptionNames.SeekerCloseDoors, new BooleanValue(true)),
       gameOptions.createOption(HideAndSeekGameOptionCategories.Hiders, HideAndSeekGameOptionNames.HidersNamesVisibility, new BooleanValue(true)),
-      gameOptions.createOption(HideAndSeekGameOptionCategories.Hiders, HideAndSeekGameOptionNames.HidersColorLoss, new BooleanValue(false)),
+      //gameOptions.createOption(HideAndSeekGameOptionCategories.Hiders, HideAndSeekGameOptionNames.HidersColorLoss, new BooleanValue(false)),
       gameOptions.createOption(HideAndSeekGameOptionCategories.Hiders, HideAndSeekGameOptionNames.HidersOpacity, new NumberValue(15, 5, 10, 50, false, "{0}%")),
     ]);
   }
