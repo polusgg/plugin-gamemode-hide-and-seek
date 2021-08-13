@@ -11,8 +11,11 @@ import { ServiceType } from "@polusgg/plugin-polusgg-api/src/types/enums";
 import { PlayerAnimationField } from "@polusgg/plugin-polusgg-api/src/types/playerAnimationFields";
 import { HideAndSeekGameOptions } from "../..";
 import { HideAndSeekGameOptionNames } from "../types";
+import { PlayerColor } from "@nodepolus/framework/src/types/enums";
 
 export class HiderRole extends Crewmate {
+  public startingColor?: PlayerColor;
+
   protected readonly metadata: RoleMetadata = {
     name: "Hider",
     alignment: RoleAlignment.Crewmate,
@@ -23,8 +26,8 @@ export class HiderRole extends Crewmate {
 
     const playerAnimationService = Services.get(ServiceType.Animation);
     const gameOptions = Services.get(ServiceType.GameOptions).getGameOptions<HideAndSeekGameOptions>(owner.getLobby());
-
     const initialOpacity = gameOptions.getOption(HideAndSeekGameOptionNames.HidersOpacity).getValue().value / 100;
+    const nameVisibility = gameOptions.getOption(HideAndSeekGameOptionNames.HidersNamesVisibility).getValue().getSelected();
 
     playerAnimationService.beginPlayerAnimation(this.owner, [PlayerAnimationField.Opacity, PlayerAnimationField.HatOpacity, PlayerAnimationField.SkinOpacity, PlayerAnimationField.PetOpacity, PlayerAnimationField.NameOpacity], [
       new PlayerAnimationKeyframe({
@@ -32,7 +35,7 @@ export class HiderRole extends Crewmate {
         duration: 0,
         opacity: initialOpacity,
         petOpacity: initialOpacity,
-        nameOpacity: gameOptions.getOption(HideAndSeekGameOptionNames.HidersNamesVisibility).getValue().getSelected() === "Always" ? 1 : 0,
+        nameOpacity: nameVisibility === "While Idle" ? 0 : initialOpacity,
       }),
     ], false);
     this.owner.setMeta("pgg.hns.currentopacity", initialOpacity);
@@ -53,7 +56,7 @@ export class HiderRole extends Crewmate {
             duration: 100,
             opacity: opacity,
             petOpacity: opacity,
-            nameOpacity: gameOptions.getOption(HideAndSeekGameOptionNames.HidersNamesVisibility).getValue().getSelected() === "While Idle" ? (isMaxOpacity ? opacity : 0) : 1,
+            nameOpacity: nameVisibility === "While Idle" ? (isMaxOpacity ? opacity : 0) : opacity,
           }),
         ], false);
         event.getPlayer().setMeta("pgg.hns.currentopacity", opacity);
