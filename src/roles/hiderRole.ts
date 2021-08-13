@@ -26,12 +26,13 @@ export class HiderRole extends Crewmate {
 
     const initialOpacity = gameOptions.getOption(HideAndSeekGameOptionNames.HidersOpacity).getValue().value / 100;
 
-    playerAnimationService.beginPlayerAnimation(this.owner, [PlayerAnimationField.Opacity, PlayerAnimationField.SkinOpacity, PlayerAnimationField.HatOpacity, PlayerAnimationField.PetOpacity], [
+    playerAnimationService.beginPlayerAnimation(this.owner, [PlayerAnimationField.Opacity, PlayerAnimationField.HatOpacity, PlayerAnimationField.SkinOpacity, PlayerAnimationField.PetOpacity, PlayerAnimationField.NameOpacity], [
       new PlayerAnimationKeyframe({
         offset: 0,
         duration: 0,
         opacity: initialOpacity,
         petOpacity: initialOpacity,
+        nameOpacity: gameOptions.getOption(HideAndSeekGameOptionNames.HidersNamesVisibility).getValue().getSelected() === "Always" ? 1 : 0,
       }),
     ], false);
     this.owner.setMeta("pgg.hns.currentopacity", initialOpacity);
@@ -43,14 +44,16 @@ export class HiderRole extends Crewmate {
 
       const opacity = clamp(event.getNewVelocity().magnitude() / event.getPlayer().getLobby().getOptions()
         .getPlayerSpeedModifier(), gameOptions.getOption(HideAndSeekGameOptionNames.HidersOpacity).getValue().value / 100, 0.7);
+      const isMaxOpacity = opacity == 0.7;
 
       if (opacity !== event.getPlayer().getMeta("pgg.hns.currentopacity")) {
-        await playerAnimationService.beginPlayerAnimation(event.getPlayer(), [PlayerAnimationField.Opacity, PlayerAnimationField.SkinOpacity, PlayerAnimationField.HatOpacity, PlayerAnimationField.PetOpacity], [
+        await playerAnimationService.beginPlayerAnimation(event.getPlayer(), [PlayerAnimationField.Opacity, PlayerAnimationField.HatOpacity, PlayerAnimationField.SkinOpacity, PlayerAnimationField.PetOpacity, PlayerAnimationField.NameOpacity], [
           new PlayerAnimationKeyframe({
             offset: 0,
             duration: 100,
             opacity: opacity,
             petOpacity: opacity,
+            nameOpacity: gameOptions.getOption(HideAndSeekGameOptionNames.HidersNamesVisibility).getValue().getSelected() === "While Idle" ? (isMaxOpacity ? opacity : 0) : 1,
           }),
         ], false);
         event.getPlayer().setMeta("pgg.hns.currentopacity", opacity);
