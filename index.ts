@@ -86,7 +86,8 @@ export default class HideAndSeek extends BaseMod {
               await this.nameService.set(player, "");
             }
             await this.hudService.setHudVisibility(player, HudItem.ReportButton, false);
-            await Services.get(ServiceType.Hud).setHudString(player, Location.MeetingButtonHudText, "__unset");
+            await Services.get(ServiceType.Hud).setHudVisibility(player, HudItem.CallMeetingButton, false);
+            await Services.get(ServiceType.Hud).setHudString(player, Location.MeetingButtonHudText, "If you see this text...\nSomething went horribly wrong.\nPing Przebot#2448 on Discord.");
           });
 
         // 5 seconds is an average IntroCutscene load time
