@@ -95,22 +95,22 @@ export default class HideAndSeek extends BaseMod {
         const timeout = setInterval(() => {
           if (timeElapsed >= freezeTime) {
             event.getGame().getLobby().getRealPlayers()
-              .forEach(player => {
+              .forEach(async player => {
                 if (player.isImpostor()) {
-                  (player.getMeta<BaseRole>("pgg.api.role") as Impostor).getImpostorButton()?.setCurrentTime(0);
-                  player.setSpeedModifier(1);
-                  player.setVisionModifier(1);
+                  await (player.getMeta<BaseRole>("pgg.api.role") as Impostor).getImpostorButton()?.setCurrentTime(0);
+                  await player.setSpeedModifier(1);
+                  await player.setVisionModifier(1);
                 }
-                this.hudService.setHudString(player, Location.RoomTracker, "__unset");
+                await this.hudService.setHudString(player, Location.RoomTracker, "__unset");
               });
             clearInterval(timeout);
           } else {
             event.getGame().getLobby().getRealPlayers()
-              .forEach(player => {
+              .forEach(async player => {
                 if (player.isImpostor()) {
-                  this.hudService.setHudString(player, Location.RoomTracker, `You will be released in ${freezeTime - timeElapsed} second${(freezeTime - timeElapsed) === 1 ? "" : "s"}`);
+                  await this.hudService.setHudString(player, Location.RoomTracker, `You will be released in ${freezeTime - timeElapsed} second${(freezeTime - timeElapsed) === 1 ? "" : "s"}`);
                 } else {
-                  this.hudService.setHudString(player, Location.RoomTracker, `<color=#FF1919FF>Seeker${event.getGame().getLobby().getRealPlayers()
+                  await this.hudService.setHudString(player, Location.RoomTracker, `<color=#FF1919FF>Seeker${event.getGame().getLobby().getRealPlayers()
                     .filter(p => p.isImpostor()).length === 1
                     ? ""
                     : "s"}</color> will be released in ${freezeTime - timeElapsed} second${(freezeTime - timeElapsed) === 1 ? "" : "s"}`);
