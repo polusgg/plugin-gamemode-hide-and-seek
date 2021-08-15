@@ -73,6 +73,7 @@ export default class HideAndSeek extends BaseMod {
       if ((Services.get(ServiceType.GameOptions).getGameOptions(event.getGame().getLobby()).getOption("Gamemode")
         .getValue() as EnumValue).getSelected() === pluginMetadata.name) {
         const gameOptions = Services.get(ServiceType.GameOptions).getGameOptions<HideAndSeekGameOptions>(event.getGame().getLobby());
+        const level = event.getGame().getLobby().getLevel();
 
         event.getGame().getLobby().setMeta("pgg.hns.enableHidersLeftText", false);
         HideAndSeek.syncHidersCount(event.getGame().getLobby());
@@ -92,39 +93,25 @@ export default class HideAndSeek extends BaseMod {
           });
 
         // 5 seconds is an average IntroCutscene load time
-        const freezeTime = 5 + gameOptions.getOption(HideAndSeekGameOptionNames.SeekerFreezeTime).getValue().value;
-        let timeElapsed = 0;
-        const timeout = setInterval(() => {
-          if (timeElapsed >= freezeTime) {
-            event.getGame().getLobby().getRealPlayers()
-              .forEach(async player => {
-                if (player.isImpostor()) {
-                  await (player.getMeta<BaseRole>("pgg.api.role") as Impostor).getImpostorButton()?.setCurrentTime(0);
-                  await player.setSpeedModifier(1);
-                  await player.setVisionModifier(1);
-                }
-                event.getGame().getLobby().setMeta("pgg.hns.enableHidersLeftText", true);
-                this.syncHidersCount(player.getLobby());
-              });
-            clearInterval(timeout);
-          } else {
-            event.getGame().getLobby().getRealPlayers()
-              .forEach(async player => {
-                if (player.isImpostor()) {
-                  await this.hudService.setHudString(player, Location.RoomTracker, `You will be released in ${freezeTime - timeElapsed} second${(freezeTime - timeElapsed) === 1 ? "" : "s"}`);
-                } else {
-                  await this.hudService.setHudString(player, Location.RoomTracker, `<color=#FF1919FF>Seeker${event.getGame().getLobby().getRealPlayers()
-                    .filter(p => p.isImpostor()).length === 1
-                    ? ""
-                    : "s"}</color> will be released in ${freezeTime - timeElapsed} second${(freezeTime - timeElapsed) === 1 ? "" : "s"}`);
-                }
-              });
-          }
-          timeElapsed += 1;
-        }, 1000);
+        let freezeTime = 5 + gameOptions.getOption(HideAndSeekGameOptionNames.SeekerFreezeTime).getValue().value;
+
+        if (event.getGame().getLobby().getLevel() === Level.Airship) {
+          freezeTime += 10;
+        } else if (level === Level.Submerged) {
+          return;
+        }
+        HideAndSeek.startSeekersFreeze(event.getGame().getLobby(), freezeTime);
       }
     });
+    this.server.on("submerged.spawnIn", event => {
+      if ((Services.get(ServiceType.GameOptions).getGameOptions(event.getGame().getLobby()).getOption("Gamemode")
+        .getValue() as EnumValue).getSelected() === pluginMetadata.name) {
+        const gameOptions = Services.get(ServiceType.GameOptions).getGameOptions<HideAndSeekGameOptions>(event.getGame().getLobby());
+        const freezeTime = gameOptions.getOption(HideAndSeekGameOptionNames.SeekerFreezeTime).getValue().value;
 
+        HideAndSeek.startSeekersFreeze(event.getGame().getLobby(), freezeTime);
+      }
+    });
     this.server.on("player.murdered", async event => {
       if ((Services.get(ServiceType.GameOptions).getGameOptions(event.getPlayer().getLobby()).getOption("Gamemode")
         .getValue() as EnumValue).getSelected() !== pluginMetadata.name || event.getPlayer().getLobby().getGameState() === GameState.NotStarted) { return }
@@ -223,6 +210,38 @@ export default class HideAndSeek extends BaseMod {
     return aliveHiders.length === 0;
   }
 
+  static startSeekersFreeze(lobby: LobbyInstance, freezeTime: number): void {
+    const hudService = Services.get(ServiceType.Hud);
+    let timeElapsed = 0;
+    const timeout = setInterval(() => {
+      if (timeElapsed >= freezeTime) {
+        lobby.getRealPlayers()
+          .forEach(async player => {
+            if (player.isImpostor()) {
+              await (player.getMeta<BaseRole>("pgg.api.role") as Impostor).getImpostorButton()?.setCurrentTime(0);
+              await player.setSpeedModifier(1);
+              await player.setVisionModifier(1);
+            }
+            lobby.setMeta("pgg.hns.enableHidersLeftText", true);
+            this.syncHidersCount(player.getLobby());
+          });
+        clearInterval(timeout);
+      } else {
+        lobby.getRealPlayers()
+          .forEach(async player => {
+            if (player.isImpostor()) {
+              await hudService.setHudString(player, Location.RoomTracker, `You will be released in ${freezeTime - timeElapsed} second${(freezeTime - timeElapsed) === 1 ? "" : "s"}`);
+            } else {
+              await hudService.setHudString(player, Location.RoomTracker, `<color=#FF1919FF>Seeker${lobby.getRealPlayers()
+                .filter(p => p.isImpostor()).length === 1
+                ? ""
+                : "s"}</color> will be released in ${freezeTime - timeElapsed} second${(freezeTime - timeElapsed) === 1 ? "" : "s"}`);
+            }
+          });
+      }
+      timeElapsed += 1;
+    }, 1000);
+  }
 
   static syncHidersCount(lobby: LobbyInstance): void {
     if (!lobby.getMeta<boolean>("pgg.hns.enableHidersLeftText")) {
