@@ -2,7 +2,7 @@ import { LobbyInstance } from "@nodepolus/framework/src/api/lobby/lobbyInstance"
 import { PluginMetadata } from "@nodepolus/framework/src/api/plugin";
 import { Palette } from "@nodepolus/framework/src/static";
 import { Mutable } from "@nodepolus/framework/src/types";
-import { GameState } from "@nodepolus/framework/src/types/enums";
+import { GameState, Level } from "@nodepolus/framework/src/types/enums";
 import { BaseMod } from "@polusgg/plugin-polusgg-api/src/baseMod/baseMod";
 import { BaseRole, RoleAlignment } from "@polusgg/plugin-polusgg-api/src/baseRole/baseRole";
 import { Impostor } from "@polusgg/plugin-polusgg-api/src/baseRole/impostor/impostor";
@@ -48,7 +48,6 @@ export default class HideAndSeek extends BaseMod {
   private readonly hudService = Services.get(ServiceType.Hud);
   private readonly endGameService = Services.get(ServiceType.EndGame);
   private readonly nameService = Services.get(ServiceType.Name);
-  private hidersLeft = 0;
 
   constructor() {
     super(pluginMetadata);
@@ -76,7 +75,7 @@ export default class HideAndSeek extends BaseMod {
         const gameOptions = Services.get(ServiceType.GameOptions).getGameOptions<HideAndSeekGameOptions>(event.getGame().getLobby());
 
         event.getGame().getLobby().setMeta("pgg.hns.enableHidersLeftText", false);
-        this.syncHidersCount(event.getGame().getLobby());
+        HideAndSeek.syncHidersCount(event.getGame().getLobby());
         await this.endGameService.registerExclusion(event.getGame(), { intentName: "impostorKill" });
         await this.endGameService.registerExclusion(event.getGame(), { intentName: "impostorDisconnected" });
         await this.endGameService.registerExclusion(event.getGame(), { intentName: "crewmateDisconnected" });
@@ -129,7 +128,7 @@ export default class HideAndSeek extends BaseMod {
     this.server.on("player.murdered", async event => {
       if ((Services.get(ServiceType.GameOptions).getGameOptions(event.getPlayer().getLobby()).getOption("Gamemode")
         .getValue() as EnumValue).getSelected() !== pluginMetadata.name || event.getPlayer().getLobby().getGameState() === GameState.NotStarted) { return }
-      this.syncHidersCount(event.getPlayer().getLobby());
+      HideAndSeek.syncHidersCount(event.getPlayer().getLobby());
 
       if (event.getKiller().getMeta<BaseRole | undefined>("pgg.api.role")?.getAlignment() === RoleAlignment.Impostor && HideAndSeek.shouldEndGameSeekers(event.getPlayer().getLobby())) {
         await this.endGameService.registerEndGameIntent(event.getPlayer().getLobby().getGame()!, {
@@ -179,7 +178,7 @@ export default class HideAndSeek extends BaseMod {
     this.server.on("player.left", async event => {
       if ((Services.get(ServiceType.GameOptions).getGameOptions(event.getLobby()).getOption("Gamemode")
         .getValue() as EnumValue).getSelected() !== pluginMetadata.name || event.getPlayer().getLobby().getGameState() === GameState.NotStarted) { return }
-      this.syncHidersCount(event.getLobby());
+      HideAndSeek.syncHidersCount(event.getLobby());
 
       if (event.getLobby().getRealPlayers().filter(p => p.isImpostor() && !p.isDead() && !p.getGameDataEntry().isDisconnected()).length === 0) {
         await this.endGameService.registerEndGameIntent(event.getPlayer().getLobby().getGame()!, {
@@ -219,10 +218,27 @@ export default class HideAndSeek extends BaseMod {
     }
 
     const players = lobby.getPlayers();
-
     const aliveHiders = players.filter(p => p.getMeta<BaseRole | undefined>("pgg.api.role")?.getAlignment() === RoleAlignment.Crewmate && !p.isDead() && !p.getGameDataEntry().isDisconnected());
 
     return aliveHiders.length === 0;
+  }
+
+
+  static syncHidersCount(lobby: LobbyInstance): void {
+    if (!lobby.getMeta<boolean>("pgg.hns.enableHidersLeftText")) {
+      return;
+    }
+
+    const hidersLeft = lobby.getRealPlayers().filter(p => !p.isDead() && !p.getGameDataEntry().isDisconnected() && !p.isImpostor()).length;
+    const hudService = Services.get(ServiceType.Hud);
+
+    lobby.getRealPlayers().forEach(async player => {
+      if (hidersLeft === 0) {
+        await hudService.setHudString(player, Location.RoomTracker, "__unset");
+      } else {
+        await hudService.setHudString(player, Location.RoomTracker, `${hidersLeft} <color=#8cffff>Hider${hidersLeft === 1 ? "" : "s"}</color> left`);
+      }
+    });
   }
 
   getRoles(lobby: LobbyInstance): RoleAssignmentData[] {
@@ -238,20 +254,6 @@ export default class HideAndSeek extends BaseMod {
         assignWith: RoleAlignment.Impostor,
       },
     ];
-  }
-
-  syncHidersCount(lobby: LobbyInstance): void {
-    if (!lobby.getMeta<boolean>("pgg.hns.enableHidersLeftText")) {
-      return;
-    }
-    this.hidersLeft = lobby.getRealPlayers().filter(p => !p.isDead() && !p.getGameDataEntry().isDisconnected() && p.getMeta<BaseRole | undefined>("pgg.api.role")?.getAlignment() === RoleAlignment.Crewmate).length;
-    lobby.getRealPlayers().forEach(async player => {
-      if (this.hidersLeft === 0) {
-        await this.hudService.setHudString(player, Location.RoomTracker, "__unset");
-      } else {
-        await this.hudService.setHudString(player, Location.RoomTracker, `${this.hidersLeft} <color=#8cffff>Hider${this.hidersLeft === 1 ? "" : "s"}</color> left`);
-      }
-    });
   }
 
   async onEnable(lobby: LobbyInstance): Promise<void> {
