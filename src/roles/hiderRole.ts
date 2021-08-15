@@ -28,6 +28,7 @@ export class HiderRole extends Crewmate {
     const gameOptions = Services.get(ServiceType.GameOptions).getGameOptions<HideAndSeekGameOptions>(owner.getLobby());
     const initialOpacity = gameOptions.getOption(HideAndSeekGameOptionNames.HidersOpacity).getValue().value / 100;
     const nameVisibility = gameOptions.getOption(HideAndSeekGameOptionNames.HidersNamesVisibility).getValue().getSelected();
+    const chatAccess = gameOptions.getOption(HideAndSeekGameOptionNames.GeneralChatAccess).getValue().getSelected();
 
     playerAnimationService.beginPlayerAnimation(this.owner, [PlayerAnimationField.Opacity, PlayerAnimationField.HatOpacity, PlayerAnimationField.SkinOpacity, PlayerAnimationField.PetOpacity, PlayerAnimationField.NameOpacity], [
       new PlayerAnimationKeyframe({
@@ -39,6 +40,10 @@ export class HiderRole extends Crewmate {
       }),
     ], false);
     this.owner.setMeta("pgg.hns.currentopacity", initialOpacity);
+
+    if (chatAccess !== "No one") {
+      Services.get(ServiceType.Hud).chatVisibility(this.owner.getConnection()!, true);
+    }
 
     this.catch("player.position.walked", e => e.getPlayer()).execute(async event => {
       if (event.getPlayer().isDead()) {
@@ -75,6 +80,7 @@ export class HiderRole extends Crewmate {
       }
     };
   }
+
 
   getAssignmentScreen(_player: PlayerInstance): StartGameScreenData {
     return {
