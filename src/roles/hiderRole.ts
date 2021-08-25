@@ -45,6 +45,12 @@ export class HiderRole extends Crewmate {
       Services.get(ServiceType.Hud).chatVisibility(this.owner.getConnection()!, true);
     }
 
+    this.catch("submerged.spawnIn", e => e.getGame()).execute(_ => {
+      if (chatAccess !== "No one") {
+        Services.get(ServiceType.Hud).chatVisibility(this.owner.getConnection()!, true);
+      }
+    });
+
     this.catch("player.position.walked", e => e.getPlayer()).execute(async event => {
       if (event.getPlayer().isDead()) {
         return;

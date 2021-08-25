@@ -33,6 +33,12 @@ export class SeekerRole extends Impostor {
       Services.get(ServiceType.Hud).chatVisibility(this.owner.getConnection()!, true);
     }
 
+    this.catch("submerged.spawnIn", e => e.getGame()).execute(_ => {
+      if (chatAccess === "Everyone") {
+        Services.get(ServiceType.Hud).chatVisibility(this.owner.getConnection()!, true);
+      }
+    });
+
     this.catch("player.murdered", e => e.getKiller()).execute(event => {
       if (this.owner.getSpeedModifier() === 0) {
         event.cancel();
