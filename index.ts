@@ -22,6 +22,7 @@ export type HideAndSeekGameOptions = {
   [HideAndSeekGameOptionNames.HidersNamesVisibility]: EnumValue;
   //[HideAndSeekGameOptionNames.HidersColorLoss]: BooleanValue;
   [HideAndSeekGameOptionNames.HidersOpacity]: NumberValue;
+  // [HideAndSeekGameOptionNames.GeneralStalemate]: NumberValue;
   [HideAndSeekGameOptionNames.GeneralChatAccess]: EnumValue;
 };
 
@@ -286,6 +287,7 @@ export default class HideAndSeek extends BaseMod {
       gameOptions.createOption(HideAndSeekGameOptionCategories.Hiders, HideAndSeekGameOptionNames.HidersNamesVisibility, new EnumValue(0, ["Never", "While Idle", "Always"])),
       //gameOptions.createOption(HideAndSeekGameOptionCategories.Hiders, HideAndSeekGameOptionNames.HidersColorLoss, new BooleanValue(false)),
       gameOptions.createOption(HideAndSeekGameOptionCategories.Hiders, HideAndSeekGameOptionNames.HidersOpacity, new NumberValue(15, 5, 10, 50, false, "{0}%")),
+      // gameOptions.createOption(HideAndSeekGameOptionCategories.General, HideAndSeekGameOptionNames.GeneralStalemate, new NumberValue(0, 1, 0, 15, true, "{0} min")),
       gameOptions.createOption(HideAndSeekGameOptionCategories.General, HideAndSeekGameOptionNames.GeneralChatAccess, new EnumValue(0, ["No one", "Only Hiders", "Everyone"])),
     ]);
   }

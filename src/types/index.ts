@@ -4,6 +4,7 @@ export enum HideAndSeekGameOptionNames {
   HidersNamesVisibility = "<color=#8cffff>Hiders</color> names are hidden",
   //HidersColorLoss = "<color=#8cffff>Hiders</color> lose color while idle",
   HidersOpacity = "<color=#8cffff>Hiders</color> opacity while idle",
+  // GeneralStalemate = "Max game time",
   GeneralChatAccess = "Can use chat during game",
 }
 
