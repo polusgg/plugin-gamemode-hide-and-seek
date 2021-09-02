@@ -163,40 +163,42 @@ export default class HideAndSeek extends BaseMod {
       }
     });
 
-    this.server.on("player.left", async event => {
-      if ((Services.get(ServiceType.GameOptions).getGameOptions(event.getLobby()).getOption("Gamemode")
-        .getValue() as EnumValue).getSelected() !== pluginMetadata.name || event.getPlayer().getLobby().getGameState() === GameState.NotStarted) { return }
-      HideAndSeek.syncHidersCount(event.getLobby());
+    this.server.on("player.left", event => {
+      setTimeout(async () => {
+        if ((Services.get(ServiceType.GameOptions).getGameOptions(event.getLobby()).getOption("Gamemode")
+          .getValue() as EnumValue).getSelected() !== pluginMetadata.name || event.getPlayer().getLobby().getGameState() === GameState.NotStarted) { return }
+        HideAndSeek.syncHidersCount(event.getLobby());
 
-      if (event.getLobby().getRealPlayers().filter(p => p.isImpostor() && !p.isDead() && !p.getGameDataEntry().isDisconnected()).length === 0) {
-        await this.endGameService.registerEndGameIntent(event.getPlayer().getLobby().getGame()!, {
-          endGameData: new Map(event.getPlayer().getLobby().getPlayers()
-            .map(player => [player, {
-              title: "Victory",
-              subtitle: "<color=#FF1919FF>Seekers</color> disconnected",
-              color: Palette.crewmateBlue() as Mutable<[number, number, number, number]>,
-              yourTeam: event.getLobby().getPlayers()
-                .filter(sus => sus.getMeta<BaseRole | undefined>("pgg.api.role")?.getAlignment() === RoleAlignment.Crewmate),
-              winSound: WinSoundType.ImpostorWin,
-              hasWon: !player.isImpostor(),
-            }])),
-          intentName: "seekersDisconnected",
-        });
-      } else if (HideAndSeek.shouldEndGameSeekers(event.getLobby())) {
-        await this.endGameService.registerEndGameIntent(event.getPlayer().getLobby().getGame()!, {
-          endGameData: new Map(event.getPlayer().getLobby().getPlayers()
-            .map(player => [player, {
-              title: player.isImpostor() ? "Victory" : "<color=#FF1919FF>Defeat</color>",
-              subtitle: "<color=#8CFFFFFF>Hiders</color> disconnected",
-              color: Palette.impostorRed() as Mutable<[number, number, number, number]>,
-              yourTeam: event.getLobby().getPlayers()
-                .filter(sus => sus.isImpostor()),
-              winSound: WinSoundType.CrewmateWin,
-              hasWon: player.isImpostor(),
-            }])),
-          intentName: "hidersDisconnected",
-        });
-      }
+        if (event.getLobby().getRealPlayers().filter(p => p.isImpostor() && !p.isDead() && !p.getGameDataEntry().isDisconnected()).length === 0) {
+          await this.endGameService.registerEndGameIntent(event.getPlayer().getLobby().getGame()!, {
+            endGameData: new Map(event.getPlayer().getLobby().getPlayers()
+              .map(player => [player, {
+                title: "Victory",
+                subtitle: "<color=#FF1919FF>Seekers</color> disconnected",
+                color: Palette.crewmateBlue() as Mutable<[number, number, number, number]>,
+                yourTeam: event.getLobby().getPlayers()
+                  .filter(sus => sus.getMeta<BaseRole | undefined>("pgg.api.role")?.getAlignment() === RoleAlignment.Crewmate),
+                winSound: WinSoundType.ImpostorWin,
+                hasWon: !player.isImpostor(),
+              }])),
+            intentName: "seekersDisconnected",
+          });
+        } else if (HideAndSeek.shouldEndGameSeekers(event.getLobby())) {
+          await this.endGameService.registerEndGameIntent(event.getPlayer().getLobby().getGame()!, {
+            endGameData: new Map(event.getPlayer().getLobby().getPlayers()
+              .map(player => [player, {
+                title: player.isImpostor() ? "Victory" : "<color=#FF1919FF>Defeat</color>",
+                subtitle: "<color=#8CFFFFFF>Hiders</color> disconnected",
+                color: Palette.impostorRed() as Mutable<[number, number, number, number]>,
+                yourTeam: event.getLobby().getPlayers()
+                  .filter(sus => sus.isImpostor()),
+                winSound: WinSoundType.CrewmateWin,
+                hasWon: player.isImpostor(),
+              }])),
+            intentName: "hidersDisconnected",
+          });
+        }
+      }, 500);
     });
   }
 
