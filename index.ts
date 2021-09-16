@@ -8,6 +8,8 @@ import { BaseRole, RoleAlignment } from "@polusgg/plugin-polusgg-api/src/baseRol
 import { Impostor } from "@polusgg/plugin-polusgg-api/src/baseRole/impostor/impostor";
 import { BooleanValue, EnumValue, NumberValue } from "@polusgg/plugin-polusgg-api/src/packets/root/setGameOption";
 import { Services } from "@polusgg/plugin-polusgg-api/src/services";
+import { LobbyDefaultOptions } from "@polusgg/plugin-polusgg-api/src/services/gameOptions/gameOptionsService";
+import { GameOptionPriority } from "@polusgg/plugin-polusgg-api/src/services/gameOptions/gameOptionsSet";
 import { RoleAssignmentData, RoleManagerService } from "@polusgg/plugin-polusgg-api/src/services/roleManager/roleManagerService";
 import { Location, ServiceType } from "@polusgg/plugin-polusgg-api/src/types/enums";
 import { HudItem } from "@polusgg/plugin-polusgg-api/src/types/enums/hudItem";
@@ -281,9 +283,9 @@ export default class HideAndSeek extends BaseMod {
   async onEnable(lobby: LobbyInstance): Promise<void> {
     await super.onEnable(lobby);
 
-    const gameOptions = Services.get(ServiceType.GameOptions).getGameOptions<HideAndSeekGameOptions>(lobby);
+    const gameOptions = Services.get(ServiceType.GameOptions).getGameOptions<HideAndSeekGameOptions & LobbyDefaultOptions>(lobby);
 
-    await Promise.all([
+    await Promise.all<any>([
       gameOptions.createOption(HideAndSeekGameOptionCategories.Seekers, HideAndSeekGameOptionNames.SeekerFreezeTime, new NumberValue(10, 2, 4, 20, false, "{0}s")),
       gameOptions.createOption(HideAndSeekGameOptionCategories.Seekers, HideAndSeekGameOptionNames.SeekerCloseDoors, new BooleanValue(true)),
       gameOptions.createOption(HideAndSeekGameOptionCategories.Hiders, HideAndSeekGameOptionNames.HidersNamesVisibility, new EnumValue(0, ["Never", "While Idle", "Always"])),
@@ -291,13 +293,27 @@ export default class HideAndSeek extends BaseMod {
       gameOptions.createOption(HideAndSeekGameOptionCategories.Hiders, HideAndSeekGameOptionNames.HidersOpacity, new NumberValue(15, 5, 10, 50, false, "{0}%")),
       // gameOptions.createOption(HideAndSeekGameOptionCategories.General, HideAndSeekGameOptionNames.GeneralStalemate, new NumberValue(0, 1, 0, 15, true, "{0} min")),
       gameOptions.createOption(HideAndSeekGameOptionCategories.General, HideAndSeekGameOptionNames.GeneralChatAccess, new EnumValue(0, ["No one", "Only Hiders", "Everyone"])),
+      gameOptions.deleteOption("Anonymous Votes"),
+      gameOptions.deleteOption("Confirm Ejects"),
+      gameOptions.deleteOption("Emergency Cooldown"),
+      gameOptions.deleteOption("Emergency Meetings"),
+      gameOptions.deleteOption("Discussion Time"),
+      gameOptions.deleteOption("Voting Time"),
+      gameOptions.deleteOption("<color=#ff1919>Impostor</color> Kill Cooldown")
     ]);
   }
 
   async onDisable(lobby: LobbyInstance): Promise<void> {
     super.onDisable(lobby);
 
-    const gameOptions = Services.get(ServiceType.GameOptions).getGameOptions<HideAndSeekGameOptions>(lobby);
+    const gameOptions = Services.get(ServiceType.GameOptions).getGameOptions<HideAndSeekGameOptions & LobbyDefaultOptions>(lobby);
+
+    gameOptions.createOption("Meeting Settings", "Anonymous Votes", new BooleanValue(false), GameOptionPriority.Higher - 10);
+    gameOptions.createOption("Meeting Settings", "Confirm Ejects", new BooleanValue(false), GameOptionPriority.Higher - 9);
+    gameOptions.createOption("Meeting Settings", "Discussion Time", new NumberValue(30, 15, 0, 300, false, "{0}s"), GameOptionPriority.Higher - 7);
+    gameOptions.createOption("Meeting Settings", "Voting Time", new NumberValue(30, 30, 0, 300, true, "{0}s"), GameOptionPriority.Higher - 7);
+    gameOptions.createOption("Meeting Settings", "Emergency Cooldown", new NumberValue(15, 5, 0, 60, false, "{0}s"), GameOptionPriority.Higher - 8);
+    gameOptions.createOption("Meeting Settings", "Emergency Meetings", new NumberValue(1, 1, 0, 9, false, "{0} Buttons"), GameOptionPriority.Higher - 8);
 
     await Promise.all(Object.values(HideAndSeekGameOptionNames).map(async option => await gameOptions.deleteOption(option)));
   }
