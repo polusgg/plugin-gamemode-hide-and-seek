@@ -54,6 +54,8 @@ export default class HideAndSeek extends BaseMod {
   private readonly endGameService = Services.get(ServiceType.EndGame);
   private readonly nameService = Services.get(ServiceType.Name);
 
+  private gameDurationInterval!: NodeJS.Timeout;
+
   constructor() {
     super(pluginMetadata);
 
@@ -70,6 +72,10 @@ export default class HideAndSeek extends BaseMod {
         .getValue() as EnumValue).getSelected() === pluginMetadata.name) {
         event.cancel();
       }
+    });
+
+    this.server.on("game.ended", () => {
+      clearInterval(this.gameDurationInterval);
     });
 
     //#endregion cancels
@@ -109,6 +115,66 @@ export default class HideAndSeek extends BaseMod {
           return;
         }
         HideAndSeek.startSeekersFreeze(event.getGame().getLobby(), freezeTime);
+
+        const gameDuration = gameOptions.getOption(HideAndSeekGameOptionNames.GameDuration).getValue().value;
+        if (gameDuration > 0) {
+          const dateStarted = Date.now();
+          this.gameDurationInterval = setInterval(() => {
+            const msPassed = Date.now() - dateStarted;
+            const minutesPassed = Math.floor(msPassed / 60000);
+            const secondsPassed = Math.floor(msPassed / 1000);
+            if (minutesPassed >= gameDuration) {
+              this.endGameService.registerEndGameIntent(
+                event.getGame()!,
+                {
+                  endGameData: new Map(
+                    event.getGame().getLobby().getPlayers()
+                    .map(player => [player, {
+                      title: "<color=#969696>Stalemate</color>",
+                      subtitle: "No one completed their objective in time",
+                      color: Palette.halfWhite() as Mutable<[ number, number, number, number ]>,
+                      yourTeam: event.getGame().getLobby()
+                        .getPlayers()
+                        .filter(sus => player.isImpostor() === sus.isImpostor()),
+                      winSound: WinSoundType.ImpostorWin,
+                      hasWon: false
+                    }])
+                  ),
+                  intentName: "stalemate"
+                }
+              )
+            } else {
+              const minLeft = gameDuration - minutesPassed;
+              const secondsLeft = (gameDuration * 60) - secondsPassed;
+              if (secondsLeft < 6) {
+                for (const player of event.getGame().getLobby().getPlayers()) {
+                  Services.get(ServiceType.Hud).setHudString(player, Location.RoomTracker, secondsLeft + " second" + (secondsLeft === 1 ? "" : "s") + " left!");
+                }
+              } else if ((secondsLeft % 60) > 58 || (secondsLeft % 60) < 2) {
+                for (const player of event.getGame().getLobby().getPlayers()) {
+                  Services.get(ServiceType.Hud).setHudString(player, Location.RoomTracker, minLeft + " minute" + (minLeft === 1 ? "" : "s") + " left!");
+                }
+                setTimeout(() => {
+                  HideAndSeek.syncHidersCount(event.getGame().getLobby());
+                }, 4000);
+              } else if (secondsLeft > 28 && secondsLeft < 32) { // what the hell
+                for (const player of event.getGame().getLobby().getPlayers()) {
+                  Services.get(ServiceType.Hud).setHudString(player, Location.RoomTracker, "30 seconds left!");
+                }
+                setTimeout(() => {
+                  HideAndSeek.syncHidersCount(event.getGame().getLobby());
+                }, 4000);
+              } else if (secondsLeft > 8 && secondsLeft < 12) {
+                for (const player of event.getGame().getLobby().getPlayers()) {
+                  Services.get(ServiceType.Hud).setHudString(player, Location.RoomTracker, "10 seconds left!");
+                }
+                setTimeout(() => {
+                  HideAndSeek.syncHidersCount(event.getGame().getLobby());
+                }, 4000);
+              }
+            }
+          }, 5 * 1000);
+        }
       }
     });
     this.server.on("submerged.spawnIn", event => {
