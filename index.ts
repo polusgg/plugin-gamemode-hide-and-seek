@@ -26,6 +26,7 @@ export type HideAndSeekGameOptions = {
   [HideAndSeekGameOptionNames.HidersOpacity]: NumberValue;
   // [HideAndSeekGameOptionNames.GeneralStalemate]: NumberValue;
   [HideAndSeekGameOptionNames.GeneralChatAccess]: EnumValue;
+  [HideAndSeekGameOptionNames.AllowAdminTable]: BooleanValue;
 };
 
 const pluginMetadata: PluginMetadata = {
@@ -93,6 +94,9 @@ export default class HideAndSeek extends BaseMod {
             await this.hudService.setHudVisibility(player, HudItem.ReportButton, false);
             await Services.get(ServiceType.Hud).setHudVisibility(player, HudItem.CallMeetingButton, false);
             await Services.get(ServiceType.Hud).setHudString(player, Location.MeetingButtonHudText, "If you see this text...\nSomething went horribly wrong.");
+            if (!gameOptions.getOption(HideAndSeekGameOptionNames.AllowAdminTable).getValue().value) {
+              await Services.get(ServiceType.Hud).setHudVisibility(player, HudItem.AdminTable, false);
+            }
           });
 
         // 5 seconds is an average IntroCutscene load time
@@ -293,6 +297,7 @@ export default class HideAndSeek extends BaseMod {
       gameOptions.createOption(HideAndSeekGameOptionCategories.Hiders, HideAndSeekGameOptionNames.HidersOpacity, new NumberValue(15, 5, 10, 50, false, "{0}%")),
       // gameOptions.createOption(HideAndSeekGameOptionCategories.General, HideAndSeekGameOptionNames.GeneralStalemate, new NumberValue(0, 1, 0, 15, true, "{0} min")),
       gameOptions.createOption(HideAndSeekGameOptionCategories.General, HideAndSeekGameOptionNames.GeneralChatAccess, new EnumValue(0, ["No one", "Only Hiders", "Everyone"])),
+      gameOptions.createOption(HideAndSeekGameOptionCategories.General, HideAndSeekGameOptionNames.AllowAdminTable, new BooleanValue(false)),
       gameOptions.deleteOption("Anonymous Votes"),
       gameOptions.deleteOption("Confirm Ejects"),
       gameOptions.deleteOption("Emergency Cooldown"),
