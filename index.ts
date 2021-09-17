@@ -271,15 +271,18 @@ export default class HideAndSeek extends BaseMod {
   }
 
   getRoles(lobby: LobbyInstance): RoleAssignmentData[] {
+    const adjustedImpostors = RoleManagerService.adjustImpostorCount(lobby.getPlayers().length);
+    const minimumImpostors = Math.min(adjustedImpostors, lobby.getOptions().getImpostorCount());
+
     return [
       {
         role: HiderRole,
-        playerCount: lobby.getRealPlayers().length - Math.min(lobby.getOptions().getImpostorCount(), RoleManagerService.adjustImpostorCount(lobby.getOptions().getImpostorCount())),
+        playerCount: lobby.getPlayers().length - minimumImpostors,
         assignWith: RoleAlignment.Crewmate,
       },
       {
         role: SeekerRole,
-        playerCount: Math.min(lobby.getOptions().getImpostorCount(), RoleManagerService.adjustImpostorCount(lobby.getOptions().getImpostorCount())),
+        playerCount: minimumImpostors,
         assignWith: RoleAlignment.Impostor,
       },
     ];
