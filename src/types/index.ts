@@ -6,7 +6,8 @@ export enum HideAndSeekGameOptionNames {
   HidersOpacity = "<color=#8cffff>Hiders</color> opacity while idle",
   // GeneralStalemate = "Max game time",
   GeneralChatAccess = "Can use chat during game",
-  AllowAdminTable = "Can use admin table"
+  AllowAdminTable = "Can use admin table",
+  GameDuration = "Game duration"
 }
 
 export enum HideAndSeekGameOptionCategories {

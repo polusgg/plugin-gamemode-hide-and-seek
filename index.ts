@@ -27,6 +27,7 @@ export type HideAndSeekGameOptions = {
   // [HideAndSeekGameOptionNames.GeneralStalemate]: NumberValue;
   [HideAndSeekGameOptionNames.GeneralChatAccess]: EnumValue;
   [HideAndSeekGameOptionNames.AllowAdminTable]: BooleanValue;
+  [HideAndSeekGameOptionNames.GameDuration]: NumberValue;
 };
 
 const pluginMetadata: PluginMetadata = {
@@ -289,23 +290,26 @@ export default class HideAndSeek extends BaseMod {
 
     const gameOptions = Services.get(ServiceType.GameOptions).getGameOptions<HideAndSeekGameOptions & LobbyDefaultOptions>(lobby);
 
-    await Promise.all<any>([
-      gameOptions.createOption(HideAndSeekGameOptionCategories.Seekers, HideAndSeekGameOptionNames.SeekerFreezeTime, new NumberValue(10, 2, 4, 20, false, "{0}s")),
-      gameOptions.createOption(HideAndSeekGameOptionCategories.Seekers, HideAndSeekGameOptionNames.SeekerCloseDoors, new BooleanValue(true)),
-      gameOptions.createOption(HideAndSeekGameOptionCategories.Hiders, HideAndSeekGameOptionNames.HidersNamesVisibility, new EnumValue(0, ["Never", "While Idle", "Always"])),
-      //gameOptions.createOption(HideAndSeekGameOptionCategories.Hiders, HideAndSeekGameOptionNames.HidersColorLoss, new BooleanValue(false)),
-      gameOptions.createOption(HideAndSeekGameOptionCategories.Hiders, HideAndSeekGameOptionNames.HidersOpacity, new NumberValue(15, 5, 10, 50, false, "{0}%")),
-      // gameOptions.createOption(HideAndSeekGameOptionCategories.General, HideAndSeekGameOptionNames.GeneralStalemate, new NumberValue(0, 1, 0, 15, true, "{0} min")),
-      gameOptions.createOption(HideAndSeekGameOptionCategories.General, HideAndSeekGameOptionNames.GeneralChatAccess, new EnumValue(0, ["No one", "Only Hiders", "Everyone"])),
-      gameOptions.createOption(HideAndSeekGameOptionCategories.General, HideAndSeekGameOptionNames.AllowAdminTable, new BooleanValue(false)),
-      gameOptions.deleteOption("Anonymous Votes"),
-      gameOptions.deleteOption("Confirm Ejects"),
-      gameOptions.deleteOption("Emergency Cooldown"),
-      gameOptions.deleteOption("Emergency Meetings"),
-      gameOptions.deleteOption("Discussion Time"),
-      gameOptions.deleteOption("Voting Time"),
-      gameOptions.deleteOption("<color=#ff1919>Impostor</color> Kill Cooldown")
-    ]);
+    setTimeout(async () => {
+      await Promise.all<any>([
+        gameOptions.createOption(HideAndSeekGameOptionCategories.Seekers, HideAndSeekGameOptionNames.SeekerFreezeTime, new NumberValue(10, 2, 4, 20, false, "{0}s")),
+        gameOptions.createOption(HideAndSeekGameOptionCategories.Seekers, HideAndSeekGameOptionNames.SeekerCloseDoors, new BooleanValue(true)),
+        gameOptions.createOption(HideAndSeekGameOptionCategories.Hiders, HideAndSeekGameOptionNames.HidersNamesVisibility, new EnumValue(0, ["Never", "While Idle", "Always"])),
+        //gameOptions.createOption(HideAndSeekGameOptionCategories.Hiders, HideAndSeekGameOptionNames.HidersColorLoss, new BooleanValue(false)),
+        gameOptions.createOption(HideAndSeekGameOptionCategories.Hiders, HideAndSeekGameOptionNames.HidersOpacity, new NumberValue(15, 5, 10, 50, false, "{0}%")),
+        // gameOptions.createOption(HideAndSeekGameOptionCategories.General, HideAndSeekGameOptionNames.GeneralStalemate, new NumberValue(0, 1, 0, 15, true, "{0} min")),
+        gameOptions.createOption(HideAndSeekGameOptionCategories.General, HideAndSeekGameOptionNames.GeneralChatAccess, new EnumValue(0, ["No one", "Only Hiders", "Everyone"])),
+        gameOptions.createOption(HideAndSeekGameOptionCategories.General, HideAndSeekGameOptionNames.AllowAdminTable, new BooleanValue(false)),
+        gameOptions.createOption(HideAndSeekGameOptionCategories.General, HideAndSeekGameOptionNames.GameDuration, new NumberValue(0, 1, 0, 15, true, "{0}m")),
+        gameOptions.deleteOption("Anonymous Votes"),
+        gameOptions.deleteOption("Confirm Ejects"),
+        gameOptions.deleteOption("Emergency Cooldown"),
+        gameOptions.deleteOption("Emergency Meetings"),
+        gameOptions.deleteOption("Discussion Time"),
+        gameOptions.deleteOption("Voting Time"),
+        gameOptions.deleteOption("<color=#ff1919>Impostor</color> Kill Cooldown")
+      ]);
+    }, 100);
   }
 
   async onDisable(lobby: LobbyInstance): Promise<void> {
