@@ -27,7 +27,7 @@ export class HiderRole extends Crewmate {
     const playerAnimationService = Services.get(ServiceType.Animation);
     const gameOptions = Services.get(ServiceType.GameOptions).getGameOptions<HideAndSeekGameOptions>(owner.getLobby());
     const initialOpacity = gameOptions.getOption(HideAndSeekGameOptionNames.HidersOpacity).getValue().value / 100;
-    const nameVisibility = gameOptions.getOption(HideAndSeekGameOptionNames.HidersNamesVisibility).getValue().getSelected();
+    const nameVisibility = gameOptions.getOption(HideAndSeekGameOptionNames.HidersNamesHidden).getValue().getSelected();
     const chatAccess = gameOptions.getOption(HideAndSeekGameOptionNames.GeneralChatAccess).getValue().getSelected();
 
     playerAnimationService.beginPlayerAnimation(this.owner, [PlayerAnimationField.Opacity, PlayerAnimationField.HatOpacity, PlayerAnimationField.SkinOpacity, PlayerAnimationField.PetOpacity, PlayerAnimationField.NameOpacity], [

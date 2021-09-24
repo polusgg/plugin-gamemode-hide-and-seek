@@ -1,5 +1,6 @@
 import { LobbyInstance } from "@nodepolus/framework/src/api/lobby/lobbyInstance";
 import { PluginMetadata } from "@nodepolus/framework/src/api/plugin";
+import { Player } from "@nodepolus/framework/src/player";
 import { Palette } from "@nodepolus/framework/src/static";
 import { Mutable } from "@nodepolus/framework/src/types";
 import { GameState, Level } from "@nodepolus/framework/src/types/enums";
@@ -19,9 +20,14 @@ import { SeekerRole } from "./src/roles/seekerRole";
 import { HideAndSeekGameOptionCategories, HideAndSeekGameOptionNames } from "./src/types";
 
 export type HideAndSeekGameOptions = {
+  [HideAndSeekGameOptionNames.SeekerVision]: NumberValue;
+  [HideAndSeekGameOptionNames.SeekerPlayerSpeed]: NumberValue;
   [HideAndSeekGameOptionNames.SeekerFreezeTime]: NumberValue;
   [HideAndSeekGameOptionNames.SeekerCloseDoors]: BooleanValue;
-  [HideAndSeekGameOptionNames.HidersNamesVisibility]: EnumValue;
+  [HideAndSeekGameOptionNames.SeekerKillDistance]: EnumValue;
+  [HideAndSeekGameOptionNames.HidersVision]: NumberValue;
+  [HideAndSeekGameOptionNames.HidersPlayerSpeed]: NumberValue;
+  [HideAndSeekGameOptionNames.HidersNamesHidden]: EnumValue;
   //[HideAndSeekGameOptionNames.HidersColorLoss]: BooleanValue;
   [HideAndSeekGameOptionNames.HidersOpacity]: NumberValue;
   // [HideAndSeekGameOptionNames.GeneralStalemate]: NumberValue;
@@ -87,7 +93,11 @@ export default class HideAndSeek extends BaseMod {
         const level = event.getGame().getLobby().getLevel();
 
         event.getGame().getLobby().setMeta("pgg.hns.enableHidersLeftText", false);
-        HideAndSeek.syncHidersCount(event.getGame().getLobby());
+        event.getGame().getLobby().getOptions().setKillDistance(gameOptions.getOption(HideAndSeekGameOptionNames.SeekerKillDistance).getValue().index);
+        (event.getGame().getLobby().getPlayers()[0] as Player).getEntity().getPlayerControl().syncSettings(
+          event.getGame().getLobby().getOptions()
+        );
+        this.syncHidersCount(event.getGame().getLobby());
         await this.endGameService.registerExclusion(event.getGame(), { intentName: "impostorKill" });
         await this.endGameService.registerExclusion(event.getGame(), { intentName: "impostorDisconnected" });
         await this.endGameService.registerExclusion(event.getGame(), { intentName: "crewmateDisconnected" });
@@ -95,8 +105,13 @@ export default class HideAndSeek extends BaseMod {
 
         event.getGame().getLobby().getRealPlayers()
           .forEach(async player => {
-            if (!player.isImpostor() && gameOptions.getOption(HideAndSeekGameOptionNames.HidersNamesVisibility).getValue().getSelected() === "Always") {
-              await this.nameService.set(player, "");
+            if (!player.isImpostor()) {
+              await player.setSpeedModifier(gameOptions.getOption(HideAndSeekGameOptionNames.HidersPlayerSpeed).getValue().value);
+              await player.setVisionModifier(gameOptions.getOption(HideAndSeekGameOptionNames.HidersVision).getValue().value);
+
+              if (gameOptions.getOption(HideAndSeekGameOptionNames.HidersNamesHidden).getValue().getSelected() === "Always") {
+                await this.nameService.set(player, "");
+              }
             }
             await this.hudService.setHudVisibility(player, HudItem.ReportButton, false);
             await Services.get(ServiceType.Hud).setHudVisibility(player, HudItem.CallMeetingButton, false);
@@ -114,67 +129,7 @@ export default class HideAndSeek extends BaseMod {
         } else if (level === Level.Submerged) {
           return;
         }
-        HideAndSeek.startSeekersFreeze(event.getGame().getLobby(), freezeTime);
-
-        const gameDuration = gameOptions.getOption(HideAndSeekGameOptionNames.GameDuration).getValue().value;
-        if (gameDuration > 0) {
-          const dateStarted = Date.now();
-          this.gameDurationInterval = setInterval(() => {
-            const msPassed = Date.now() - dateStarted;
-            const minutesPassed = Math.floor(msPassed / 60000);
-            const secondsPassed = Math.floor(msPassed / 1000);
-            if (minutesPassed >= gameDuration) {
-              this.endGameService.registerEndGameIntent(
-                event.getGame()!,
-                {
-                  endGameData: new Map(
-                    event.getGame().getLobby().getPlayers()
-                    .map(player => [player, {
-                      title: "<color=#969696>Stalemate</color>",
-                      subtitle: "No one completed their objective in time",
-                      color: Palette.halfWhite() as Mutable<[ number, number, number, number ]>,
-                      yourTeam: event.getGame().getLobby()
-                        .getPlayers()
-                        .filter(sus => player.isImpostor() === sus.isImpostor()),
-                      winSound: WinSoundType.ImpostorWin,
-                      hasWon: false
-                    }])
-                  ),
-                  intentName: "stalemate"
-                }
-              )
-            } else {
-              const minLeft = gameDuration - minutesPassed;
-              const secondsLeft = (gameDuration * 60) - secondsPassed;
-              if (secondsLeft < 6) {
-                for (const player of event.getGame().getLobby().getPlayers()) {
-                  Services.get(ServiceType.Hud).setHudString(player, Location.RoomTracker, secondsLeft + " second" + (secondsLeft === 1 ? "" : "s") + " left!");
-                }
-              } else if ((secondsLeft % 60) > 58 || (secondsLeft % 60) < 2) {
-                for (const player of event.getGame().getLobby().getPlayers()) {
-                  Services.get(ServiceType.Hud).setHudString(player, Location.RoomTracker, minLeft + " minute" + (minLeft === 1 ? "" : "s") + " left!");
-                }
-                setTimeout(() => {
-                  HideAndSeek.syncHidersCount(event.getGame().getLobby());
-                }, 4000);
-              } else if (secondsLeft > 28 && secondsLeft < 32) { // what the hell
-                for (const player of event.getGame().getLobby().getPlayers()) {
-                  Services.get(ServiceType.Hud).setHudString(player, Location.RoomTracker, "30 seconds left!");
-                }
-                setTimeout(() => {
-                  HideAndSeek.syncHidersCount(event.getGame().getLobby());
-                }, 4000);
-              } else if (secondsLeft > 8 && secondsLeft < 12) {
-                for (const player of event.getGame().getLobby().getPlayers()) {
-                  Services.get(ServiceType.Hud).setHudString(player, Location.RoomTracker, "10 seconds left!");
-                }
-                setTimeout(() => {
-                  HideAndSeek.syncHidersCount(event.getGame().getLobby());
-                }, 4000);
-              }
-            }
-          }, 5 * 1000);
-        }
+        this.startSeekersFreeze(event.getGame().getLobby(), freezeTime);
       }
     });
     this.server.on("submerged.spawnIn", event => {
@@ -183,13 +138,13 @@ export default class HideAndSeek extends BaseMod {
         const gameOptions = Services.get(ServiceType.GameOptions).getGameOptions<HideAndSeekGameOptions>(event.getGame().getLobby());
         const freezeTime = gameOptions.getOption(HideAndSeekGameOptionNames.SeekerFreezeTime).getValue().value;
 
-        HideAndSeek.startSeekersFreeze(event.getGame().getLobby(), freezeTime);
+        this.startSeekersFreeze(event.getGame().getLobby(), freezeTime);
       }
     });
     this.server.on("player.murdered", async event => {
       if ((Services.get(ServiceType.GameOptions).getGameOptions(event.getPlayer().getLobby()).getOption("Gamemode")
         .getValue() as EnumValue).getSelected() !== pluginMetadata.name || event.getPlayer().getLobby().getGameState() === GameState.NotStarted) { return }
-      HideAndSeek.syncHidersCount(event.getPlayer().getLobby());
+      this.syncHidersCount(event.getPlayer().getLobby());
 
       if (event.getKiller().getMeta<BaseRole | undefined>("pgg.api.role")?.getAlignment() === RoleAlignment.Impostor && HideAndSeek.shouldEndGameSeekers(event.getPlayer().getLobby())) {
         await this.endGameService.registerEndGameIntent(event.getPlayer().getLobby().getGame()!, {
@@ -240,7 +195,7 @@ export default class HideAndSeek extends BaseMod {
       setTimeout(async () => {
         if ((Services.get(ServiceType.GameOptions).getGameOptions(event.getLobby()).getOption("Gamemode")
           .getValue() as EnumValue).getSelected() !== pluginMetadata.name || event.getPlayer().getLobby().getGameState() === GameState.NotStarted) { return }
-        HideAndSeek.syncHidersCount(event.getLobby());
+        this.syncHidersCount(event.getLobby());
 
         if (event.getLobby().getRealPlayers().filter(p => p.isImpostor() && !p.isDead() && !p.getGameDataEntry().isDisconnected()).length === 0) {
           await this.endGameService.registerEndGameIntent(event.getPlayer().getLobby().getGame()!, {
@@ -286,7 +241,9 @@ export default class HideAndSeek extends BaseMod {
     return aliveHiders.length === 0;
   }
 
-  static startSeekersFreeze(lobby: LobbyInstance, freezeTime: number): void {
+  startSeekersFreeze(lobby: LobbyInstance, freezeTime: number): void {
+    const gameOptions = Services.get(ServiceType.GameOptions).getGameOptions<HideAndSeekGameOptions>(lobby);
+
     const hudService = Services.get(ServiceType.Hud);
     let timeElapsed = 0;
     const timeout = setInterval(() => {
@@ -295,12 +252,54 @@ export default class HideAndSeek extends BaseMod {
           .forEach(async player => {
             if (player.isImpostor()) {
               await (player.getMeta<BaseRole>("pgg.api.role") as Impostor).getImpostorButton()?.setCurrentTime(0);
-              await player.setSpeedModifier(1);
-              await player.setVisionModifier(1);
+              await player.setSpeedModifier(gameOptions.getOption(HideAndSeekGameOptionNames.SeekerPlayerSpeed).getValue().value);
+              await player.setVisionModifier(gameOptions.getOption(HideAndSeekGameOptionNames.SeekerVision).getValue().value);
             }
             lobby.setMeta("pgg.hns.enableHidersLeftText", true);
             this.syncHidersCount(player.getLobby());
           });
+        const gameDuration = gameOptions.getOption(HideAndSeekGameOptionNames.GameDuration).getValue().value;
+        if (gameDuration > 0) {
+          const dateStarted = Date.now();
+          this.gameDurationInterval = setInterval(() => {
+            const msPassed = Date.now() - dateStarted;
+            if (msPassed >= (gameDuration * 60000)) {
+              this.endGameService.registerEndGameIntent(
+                lobby.getGame()!,
+                {
+                  endGameData: new Map(
+                    lobby.getPlayers()
+                    .map(player => [player, {
+                      title: "<color=#969696>Stalemate</color>",
+                      subtitle: "No one completed their objective in time",
+                      color: Palette.halfWhite() as Mutable<[ number, number, number, number ]>,
+                      yourTeam: lobby
+                        .getPlayers()
+                        .filter(sus => player.isImpostor() === sus.isImpostor()),
+                      winSound: WinSoundType.ImpostorWin,
+                      hasWon: false
+                    }])
+                  ),
+                  intentName: "stalemate"
+                }
+              )
+            } else {
+              const msLeft = (gameDuration * 60000) - msPassed;
+              const minutesLeft = Math.ceil(msLeft / 60000);
+              const secondsLeft = Math.floor(msLeft / 1000);
+
+              if (minutesLeft > 1) {
+                for (const player of lobby.getPlayers()) {
+                  Services.get(ServiceType.Hud).setHudString(player, Location.TaskText, player.getMeta<BaseRole>("pgg.api.role").getDescriptionText() + "\n" + minutesLeft + " minutes remaining");
+                }
+              } else {
+                for (const player of lobby.getPlayers()) {
+                  Services.get(ServiceType.Hud).setHudString(player, Location.TaskText, player.getMeta<BaseRole>("pgg.api.role").getDescriptionText() + "\n" + secondsLeft + " second" + (secondsLeft === 1 ? "" : "s") + " remaining");
+                }
+              }
+            }
+          }, 1000);
+        }
         clearInterval(timeout);
       } else {
         lobby.getRealPlayers()
@@ -319,7 +318,7 @@ export default class HideAndSeek extends BaseMod {
     }, 1000);
   }
 
-  static syncHidersCount(lobby: LobbyInstance): void {
+  syncHidersCount(lobby: LobbyInstance): void {
     if (!lobby.getMeta<boolean>("pgg.hns.enableHidersLeftText")) {
       return;
     }
@@ -361,15 +360,23 @@ export default class HideAndSeek extends BaseMod {
 
     setTimeout(async () => {
       await Promise.all<any>([
+        gameOptions.createOption(HideAndSeekGameOptionCategories.Seekers, HideAndSeekGameOptionNames.SeekerPlayerSpeed, new NumberValue(1, 0.25, 0.25, 3, false, "{0}x")),
+        gameOptions.createOption(HideAndSeekGameOptionCategories.Seekers, HideAndSeekGameOptionNames.SeekerVision, new NumberValue(1, 0.25, 0.25, 3, false, "{0}x")),
         gameOptions.createOption(HideAndSeekGameOptionCategories.Seekers, HideAndSeekGameOptionNames.SeekerFreezeTime, new NumberValue(10, 2, 4, 20, false, "{0}s")),
         gameOptions.createOption(HideAndSeekGameOptionCategories.Seekers, HideAndSeekGameOptionNames.SeekerCloseDoors, new BooleanValue(true)),
-        gameOptions.createOption(HideAndSeekGameOptionCategories.Hiders, HideAndSeekGameOptionNames.HidersNamesVisibility, new EnumValue(0, ["Never", "While Idle", "Always"])),
+        gameOptions.createOption(HideAndSeekGameOptionCategories.Seekers, HideAndSeekGameOptionNames.SeekerKillDistance, new EnumValue(0, ["Short", "Normal", "Long"])),
+        gameOptions.createOption(HideAndSeekGameOptionCategories.Hiders, HideAndSeekGameOptionNames.HidersPlayerSpeed, new NumberValue(1, 0.25, 0.25, 3, false, "{0}x")),
+        gameOptions.createOption(HideAndSeekGameOptionCategories.Hiders, HideAndSeekGameOptionNames.HidersVision, new NumberValue(1, 0.25, 0.25, 3, false, "{0}x")),
+        gameOptions.createOption(HideAndSeekGameOptionCategories.Hiders, HideAndSeekGameOptionNames.HidersNamesHidden, new EnumValue(0, ["Never", "While Idle", "Always"])),
         //gameOptions.createOption(HideAndSeekGameOptionCategories.Hiders, HideAndSeekGameOptionNames.HidersColorLoss, new BooleanValue(false)),
         gameOptions.createOption(HideAndSeekGameOptionCategories.Hiders, HideAndSeekGameOptionNames.HidersOpacity, new NumberValue(15, 5, 10, 50, false, "{0}%")),
-        // gameOptions.createOption(HideAndSeekGameOptionCategories.General, HideAndSeekGameOptionNames.GeneralStalemate, new NumberValue(0, 1, 0, 15, true, "{0} min")),
-        gameOptions.createOption(HideAndSeekGameOptionCategories.General, HideAndSeekGameOptionNames.GeneralChatAccess, new EnumValue(0, ["No one", "Only Hiders", "Everyone"])),
+        gameOptions.createOption(HideAndSeekGameOptionCategories.General, HideAndSeekGameOptionNames.GeneralChatAccess, new EnumValue(0, ["Off", "Only Hiders", "Everyone"])),
         gameOptions.createOption(HideAndSeekGameOptionCategories.General, HideAndSeekGameOptionNames.AllowAdminTable, new BooleanValue(false)),
         gameOptions.createOption(HideAndSeekGameOptionCategories.General, HideAndSeekGameOptionNames.GameDuration, new NumberValue(0, 1, 0, 15, true, "{0}m")),
+        gameOptions.deleteOption("<color=#ff1919>Impostor</color> Vision"),
+        gameOptions.deleteOption("<color=#8cffff>Crewmate</color> Vision"),
+        gameOptions.deleteOption("<color=#ff1919>Impostor</color> Kill Distance"),
+        gameOptions.deleteOption("Player Speed"),
         gameOptions.deleteOption("Anonymous Votes"),
         gameOptions.deleteOption("Confirm Ejects"),
         gameOptions.deleteOption("Emergency Cooldown"),
@@ -386,12 +393,16 @@ export default class HideAndSeek extends BaseMod {
 
     const gameOptions = Services.get(ServiceType.GameOptions).getGameOptions<HideAndSeekGameOptions & LobbyDefaultOptions>(lobby);
 
+    gameOptions.createOption("", "Player Speed", new NumberValue(1, 0.25, 0.25, 3, false, "{0}x"), GameOptionPriority.Highest + 4);
     gameOptions.createOption("Meeting Settings", "Anonymous Votes", new BooleanValue(false), GameOptionPriority.Higher - 10);
     gameOptions.createOption("Meeting Settings", "Confirm Ejects", new BooleanValue(false), GameOptionPriority.Higher - 9);
-    gameOptions.createOption("Meeting Settings", "Discussion Time", new NumberValue(30, 15, 0, 300, false, "{0}s"), GameOptionPriority.Higher - 7);
-    gameOptions.createOption("Meeting Settings", "Voting Time", new NumberValue(30, 30, 0, 300, true, "{0}s"), GameOptionPriority.Higher - 7);
     gameOptions.createOption("Meeting Settings", "Emergency Cooldown", new NumberValue(15, 5, 0, 60, false, "{0}s"), GameOptionPriority.Higher - 8);
-    gameOptions.createOption("Meeting Settings", "Emergency Meetings", new NumberValue(1, 1, 0, 9, false, "{0} Buttons"), GameOptionPriority.Higher - 8);
+    gameOptions.createOption("Meeting Settings", "Emergency Meetings", new NumberValue(1, 1, 0, 9, false, "{0} Buttons"), GameOptionPriority.Higher - 8)
+    gameOptions.createOption("Meeting Settings", "Discussion Time", new NumberValue(30, 15, 0, 300, false, "{0}s"), GameOptionPriority.Higher - 7);
+    gameOptions.createOption("Meeting Settings", "Voting Time", new NumberValue(30, 30, 0, 300, true, "{0}s"), GameOptionPriority.Higher - 7);;
+    gameOptions.createOption("Role Settings", "<color=#8cffff>Crewmate</color> Vision", new NumberValue(1, 0.25, 0.25, 3, false, "{0}x"), GameOptionPriority.Normal - 5);
+    gameOptions.createOption("Role Settings", "<color=#ff1919>Impostor</color> Vision", new NumberValue(1, 0.25, 0.25, 3, false, "{0}x"), GameOptionPriority.Normal - 5);
+    gameOptions.createOption("Role Settings", "<color=#ff1919>Impostor</color> Kill Distance", new EnumValue(0, ["Short", "Normal", "Long"]), GameOptionPriority.Normal - 4);
 
     await Promise.all(Object.values(HideAndSeekGameOptionNames).map(async option => await gameOptions.deleteOption(option)));
   }
