@@ -1,3 +1,4 @@
+import { Game } from "@nodepolus/framework/src/api/game";
 import { LobbyInstance } from "@nodepolus/framework/src/api/lobby/lobbyInstance";
 import { PluginMetadata } from "@nodepolus/framework/src/api/plugin";
 import { Player } from "@nodepolus/framework/src/player";
@@ -11,7 +12,7 @@ import { BooleanValue, EnumValue, NumberValue } from "@polusgg/plugin-polusgg-ap
 import { Services } from "@polusgg/plugin-polusgg-api/src/services";
 import { LobbyDefaultOptions } from "@polusgg/plugin-polusgg-api/src/services/gameOptions/gameOptionsService";
 import { GameOptionPriority } from "@polusgg/plugin-polusgg-api/src/services/gameOptions/gameOptionsSet";
-import { RoleAssignmentData, RoleManagerService } from "@polusgg/plugin-polusgg-api/src/services/roleManager/roleManagerService";
+import { RoleManagerService } from "@polusgg/plugin-polusgg-api/src/services/roleManager/roleManagerService";
 import { Location, ServiceType } from "@polusgg/plugin-polusgg-api/src/types/enums";
 import { HudItem } from "@polusgg/plugin-polusgg-api/src/types/enums/hudItem";
 import { WinSoundType } from "@polusgg/plugin-polusgg-api/src/types/enums/winSound";
@@ -335,14 +336,14 @@ export default class HideAndSeek extends BaseMod {
     });
   }
 
-  getRoles(lobby: LobbyInstance): RoleAssignmentData[] {
-    const adjustedImpostors = RoleManagerService.adjustImpostorCount(lobby.getPlayers().length);
-    const minimumImpostors = Math.min(adjustedImpostors, lobby.getOptions().getImpostorCount());
+  assignRoles(game: Game): void {
+    const adjustedImpostors = RoleManagerService.adjustImpostorCount(game.getLobby().getPlayers().length);
+    const minimumImpostors = Math.min(adjustedImpostors, game.getLobby().getOptions().getImpostorCount());
 
-    return [
+    const assignmentData = [
       {
         role: HiderRole,
-        playerCount: lobby.getPlayers().length - minimumImpostors,
+        playerCount: game.getLobby().getPlayers().length - minimumImpostors,
         assignWith: RoleAlignment.Crewmate,
       },
       {
@@ -351,6 +352,8 @@ export default class HideAndSeek extends BaseMod {
         assignWith: RoleAlignment.Impostor,
       },
     ];
+
+    Services.get(ServiceType.RoleManager).assignRoles(game, assignmentData);
   }
 
   async onEnable(lobby: LobbyInstance): Promise<void> {
